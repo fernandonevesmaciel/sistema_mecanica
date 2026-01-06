@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Itens - Mecânica</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --warning: #f59e0b;
+            --success: #16a34a;
+            --danger: #ef4444;
+            --bg: #f3f4f6;
+            --text: #1f2937;
+            --border: #d1d5db;
+        }
+
+        body {
+            margin: 0;
+            padding-top: 80px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 0 20px;
+        }
+
+        /* Card de Formulário */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #666;
+        }
+
+        input,
+        select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .btn-main {
+            grid-column: 1 / -1;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Tabela Responsiva */
+        .table-area {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 50px;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 800px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .st-cadastro {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .st-analise {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .valor-cell {
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .btn-action {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div style="font-weight: 800; color: var(--primary); font-size: 1.2rem;">⚙️ MECÂNICA APP</div>
+        <a href="../principal.html" style="text-decoration: none; color: #666; font-weight: 600;">⬅ Voltar ao Início</a>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2 id="formTitle" style="margin-top:0; font-size: 1.1rem; color: var(--primary);">📝 CADASTRO DE MATERIAL
+                (RASCUNHO)</h2>
+            <form id="produtoForm">
+                <input type="hidden" id="editId">
+
+                <div class="field">
+                    <label>Nome do Material *</label>
+                    <input type="text" id="nome" required placeholder="Ex: Fio rígido 10mm">
+                </div>
+                <div class="field">
+                    <label>Código</label>
+                    <input type="text" id="codigo" placeholder="Obrigatório para concluir">
+                </div>
+                <div class="field">
+                    <label>Local de Uso</label>
+                    <input type="text" id="localUso">
+                </div>
+                <div class="field">
+                    <label>Valor (R$)</label>
+                    <input type="number" step="0.01" id="valor" placeholder="0.00">
+                </div>
+                <div class="field">
+                    <label>Status do Processo</label>
+                    <select id="status">
+                        <option value="cadastro">🔵 Em Cadastro</option>
+                        <option value="analise">🟠 Em Análise</option>
+                        <option value="concluido">🟢 Cadastro Concluído (Mover p/ Banco)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-main" id="btnSalvar">Salvar no Sistema</button>
+            </form>
+        </div>
+
+        <div class="table-area">
+            <h3
+                style="padding: 15px; margin: 0; background: #f8fafc; border-bottom: 1px solid #eee; font-size: 0.9rem;">
+                ⏳ MATERIAIS PENDENTES / EM ANÁLISE</h3>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Material</th>
+                            <th>Código</th>
+                            <th>Local de Uso</th>
+                            <th>Valor</th>
+                            <th style="text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
+            authDomain: "mecanica-699bb.firebaseapp.com",
+            projectId: "mecanica-699bb",
+            storageBucket: "mecanica-699bb.firebasestorage.app",
+            messagingSenderId: "223675812288",
+            appId: "1:223675812288:web:f91f3dab6705fa7a2aa025",
+            measurementId: "G-G78PR55F9F"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('produtoForm');
+            const corpoTabela = document.getElementById('corpoTabela');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const editId = document.getElementById('editId').value;
+                const status = document.getElementById('status').value;
+                const codigo = document.getElementById('codigo').value;
+                const valor = document.getElementById('valor').value;
+
+                const dados = {
+                    nome: document.getElementById('nome').value,
+                    codigo: codigo || "",
+                    localUso: document.getElementById('localUso').value || "",
+                    valor: parseFloat(valor) || 0,
+                    status: status,
+                    atualizadoEm: new Date()
+                };
+
+                try {
+                    if (status === "concluido") {
+                        if (!codigo || !valor || valor <= 0) {
+                            alert("⚠️ Atenção: Código e Valor são obrigatórios para concluir o cadastro!");
+                            return;
+                        }
+                        await addDoc(collection(db, "produtos"), { ...dados, dataFinalizado: new Date() });
+                        if (editId) {
+                            await deleteDoc(doc(db, "produtos_pendentes", editId));
+                        }
+                        alert("✅ Item finalizado e movido para o estoque oficial!");
+                    }
+                    else {
+                        if (editId) {
+                            await updateDoc(doc(db, "produtos_pendentes", editId), dados);
+                            alert("💾 Rascunho atualizado com sucesso.");
+                        } else {
+                            await addDoc(collection(db, "produtos_pendentes"), { ...dados, criadoEm: new Date() });
+                            alert("💾 Novo rascunho salvo.");
+                        }
+                    }
+                    form.reset();
+                    document.getElementById('editId').value = "";
+                } catch (err) {
+                    console.error(err);
+                    alert("Erro ao salvar dados.");
+                }
+            });
+
+            const q = query(collection(db, "produtos_pendentes"), orderBy("atualizadoEm", "desc"));
+            onSnapshot(q, (snapshot) => {
+                corpoTabela.innerHTML = "";
+                snapshot.forEach((d) => {
+                    const item = d.data();
+                    const id = d.id;
+
+                    corpoTabela.innerHTML += `
+                    <tr>
+                        <td><span class="badge st-${item.status}">${item.status.toUpperCase()}</span></td>
+                        <td><strong>${item.nome}</strong></td>
+                        <td>${item.codigo || '---'}</td>
+                        <td>${item.localUso || '---'}</td>
+                        <td class="valor-cell">R$ ${item.valor.toFixed(2)}</td>
+                        <td style="text-align: center;">
+                            <button class="btn-action" onclick="prepararEdicao('${id}', \`${item.nome}\`, '${item.codigo}', '${item.localUso}', '${item.valor}', '${item.status}')" title="Editar">✏️</button>
+                            <button class="btn-action" onclick="deletarPendente('${id}')" title="Excluir">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+                });
+            });
+        });
+
+        window.prepararEdicao = (id, nome, cod, loc, val, stat) => {
+            document.getElementById('editId').value = id;
+            document.getElementById('nome').value = nome;
+            document.getElementById('codigo').value = cod || '';
+            document.getElementById('localUso').value = loc || '';
+            document.getElementById('valor').value = val;
+            document.getElementById('status').value = stat;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deletarPendente = async (id) => {
+            if (confirm("Deseja apagar este rascunho permanentemente?")) {
+                await deleteDoc(doc(db, "produtos_pendentes", id));
+            }
+        };
+    </script>
+
+</body>
+
+</html>

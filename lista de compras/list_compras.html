@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ MECÂNICA APP - Oficial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --border: #e2e8f0;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+
+        body {
+            padding-top: 85px;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .ultrapassou {
+            color: #ef4444 !important;
+        }
+
+        .alerta-animado {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen px-4 pb-12">
+
+    <nav class="navbar shadow-sm">
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">
+            ⚙️ MECÂNICA APP
+        </div>
+        <a href="../principal.html"
+            class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar
+            ao Início</a>
+    </nav>
+
+    <div class="max-w-6xl mx-auto">
+        <div
+            class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
+            <div>
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-blue-600 uppercase">Orçamentos
+                    Mensais</h1>
+                <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Sincronização por Período</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Meta deste Mês</label>
+                    <input type="text" id="limiteOrcamento" oninput="aplicarMascara(this)"
+                        class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-400 w-48 text-right">
+                </div>
+
+                <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
+                    <select id="selectMes" onchange="trocarPeriodo()"
+                        class="bg-transparent px-2 font-bold text-slate-700 outline-none">
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                    <select id="selectAno" onchange="trocarPeriodo()"
+                        class="bg-transparent px-2 font-bold text-slate-700 outline-none">
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+                <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Pesquisar Produto</h2>
+                <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)"
+                    placeholder="Digite nome ou código..."
+                    class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 mb-4 transition-all">
+                <div id="listaSugestoes" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scroll"></div>
+            </div>
+
+            <div
+                class="lg:col-span-7 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-fit">
+                <div class="bg-slate-800 p-4 flex justify-between items-center shrink-0">
+                    <h2 class="text-white font-bold text-xs uppercase tracking-widest" id="labelPeriodo">Carregando...
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportarPDF()"
+                            class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">PDF</button>
+                        <button onclick="exportarLibreOffice()"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">PLANILHA</button>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center shrink-0">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subtotal
+                            Acumulado</span>
+                        <span id="totalPreco"
+                            class="text-2xl font-black text-slate-800 tracking-tighter transition-all">R$ 0,00</span>
+                    </div>
+                    <div id="alertaLimite"
+                        class="hidden bg-red-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase alerta-animado">
+                        ⚠️ Limite Excedido
+                    </div>
+                </div>
+
+                <ul id="listaComprasUI"
+                    class="divide-y divide-slate-100 overflow-y-auto max-h-[450px] custom-scroll min-h-[300px]"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
+            authDomain: "mecanica-699bb.firebaseapp.com",
+            projectId: "mecanica-699bb",
+            storageBucket: "mecanica-699bb.firebasestorage.app",
+            messagingSenderId: "223675812288",
+            appId: "1:223675812288:web:f91f3dab6705fa7a2aa025",
+            measurementId: "G-G78PR55F9F"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let todosProdutos = [];
+        let carrinhoAtual = [];
+        let periodoId = "";
+        let somaTotalGlobal = 0;
+        let valorLimiteDesteMes = 200000;
+
+        async function init() {
+            const snap = await getDocs(collection(db, "produtos"));
+            todosProdutos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            const d = new Date();
+            document.getElementById('selectMes').value = String(d.getMonth() + 1).padStart(2, '0');
+            document.getElementById('selectAno').value = d.getFullYear();
+
+            trocarPeriodo();
+        }
+
+        window.aplicarMascara = (campo) => {
+            let v = campo.value.replace(/\D/g, "");
+            v = (v / 100).toFixed(2) + "";
+            v = v.replace(".", ",");
+            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            campo.value = "R$ " + v;
+
+            const limpo = parseFloat(campo.value.replace(/[R$\s.]/g, "").replace(",", "."));
+            valorLimiteDesteMes = limpo;
+            salvarMetaNoBanco();
+        };
+
+        async function salvarMetaNoBanco() {
+            await setDoc(doc(db, "listas_mensais", periodoId), {
+                itens: carrinhoAtual,
+                meta: valorLimiteDesteMes
+            }, { merge: true });
+        }
+
+        window.trocarPeriodo = () => {
+            const mes = document.getElementById('selectMes').value;
+            const ano = document.getElementById('selectAno').value;
+            periodoId = `${mes}-${ano}`;
+            const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
+            document.getElementById('labelPeriodo').innerText = `Orçamento: ${mesNome} / ${ano}`;
+
+            onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
+                if (docSnap.exists()) {
+                    carrinhoAtual = docSnap.data().itens || [];
+                    valorLimiteDesteMes = docSnap.data().meta !== undefined ? docSnap.data().meta : 200000;
+                } else {
+                    carrinhoAtual = [];
+                    valorLimiteDesteMes = 200000;
+                }
+
+                const input = document.getElementById('limiteOrcamento');
+                if (document.activeElement !== input) {
+                    input.value = valorLimiteDesteMes.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+                }
+
+                renderizarCarrinho();
+                // Atualiza a busca se houver algo digitado para refletir os botões "Adicionar/Remover"
+                monitorarBusca(document.getElementById('inputBusca').value);
+            });
+        };
+
+        window.monitorarBusca = (termo) => {
+            const lista = document.getElementById('listaSugestoes');
+            if (termo.length < 2) { lista.innerHTML = ""; return; }
+
+            const filtrados = todosProdutos.filter(p =>
+                (p.codigo && String(p.codigo).includes(termo)) ||
+                (p.nome && p.nome.toLowerCase().includes(termo.toLowerCase()))
+            );
+
+            lista.innerHTML = filtrados.map(p => {
+                // VERIFICAÇÃO SE O ITEM JÁ ESTÁ NO CARRINHO
+                const jaEstaNoCarrinho = carrinhoAtual.some(item => item.id === p.id);
+
+                return `
+                <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-blue-200">
+                    <p class="font-bold text-slate-800 text-sm leading-tight">${p.nome}</p>
+                    <p class="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-tighter">Cód: ${p.codigo} | Unit: R$ ${p.valor}</p>
+                    <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
+                        <input type="number" id="qtd-${p.id}" value="1" min="1" class="w-16 p-2 bg-slate-100 border rounded-lg text-sm font-bold text-center outline-none">
+                        
+                        <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" 
+                            class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-md 
+                            ${jaEstaNoCarrinho
+                        ? 'bg-red-100 text-red-600 border border-red-200 hover:bg-red-200'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100'}">
+                            ${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        };
+
+        window.adicionar = async (id) => {
+            const prod = todosProdutos.find(p => p.id === id);
+            const qtd = parseInt(document.getElementById(`qtd-${id}`).value) || 1;
+            const valorPrevisto = (Number(prod.valor) || 0) * qtd;
+
+            if ((somaTotalGlobal + valorPrevisto) > valorLimiteDesteMes) {
+                alert(`⚠️ O limite deste mês (R$ ${valorLimiteDesteMes.toLocaleString('pt-br')}) será ultrapassado!`);
+            }
+
+            if (!carrinhoAtual.some(i => i.id === id)) {
+                const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd }];
+                await setDoc(doc(db, "listas_mensais", periodoId), {
+                    itens: novaLista,
+                    meta: valorLimiteDesteMes
+                }, { merge: true });
+            }
+        };
+
+        window.remover = async (id) => {
+            const novaLista = carrinhoAtual.filter(i => i.id !== id);
+            await setDoc(doc(db, "listas_mensais", periodoId), {
+                itens: novaLista,
+                meta: valorLimiteDesteMes
+            }, { merge: true });
+        };
+
+        window.validarLimite = () => {
+            const totalUI = document.getElementById('totalPreco');
+            const alertaUI = document.getElementById('alertaLimite');
+            if (somaTotalGlobal > valorLimiteDesteMes) {
+                totalUI.classList.add('ultrapassou');
+                alertaUI.classList.remove('hidden');
+            } else {
+                totalUI.classList.remove('ultrapassou');
+                alertaUI.classList.add('hidden');
+            }
+        };
+
+        function renderizarCarrinho() {
+            const ui = document.getElementById('listaComprasUI');
+            somaTotalGlobal = 0;
+            if (carrinhoAtual.length === 0) {
+                ui.innerHTML = `<div class="py-24 text-center text-slate-300 font-bold text-[10px] uppercase tracking-widest">Nenhum Item Adicionado</div>`;
+                document.getElementById('totalPreco').innerText = "R$ 0,00";
+                validarLimite(); return;
+            }
+            ui.innerHTML = carrinhoAtual.map(p => {
+                const totalLinha = (Number(p.valor) || 0) * (p.quantidade || 1);
+                somaTotalGlobal += totalLinha;
+                return `
+                <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors">
+                    <div><p class="text-sm font-bold text-slate-700 leading-tight">${p.nome}</p>
+                    <p class="text-[10px] text-slate-400 font-black uppercase mt-1 tracking-tight">${p.quantidade} un x R$ ${p.valor}</p></div>
+                    <div class="flex items-center gap-6"><span class="text-sm font-black text-slate-800 tracking-tighter">R$ ${totalLinha.toFixed(2).replace('.', ',')}</span>
+                    <button onclick="remover('${p.id}')" class="text-slate-200 hover:text-red-500 font-bold text-lg">✕</button></div>
+                </li>`;
+            }).join('');
+            document.getElementById('totalPreco').innerText = `R$ ${somaTotalGlobal.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`;
+            validarLimite();
+        }
+
+        window.exportarPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const docPdf = new jsPDF();
+            const mes = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
+            docPdf.setFontSize(16);
+            docPdf.text(`ORÇAMENTO: ${mes}`, 14, 20);
+            const body = carrinhoAtual.map(p => [p.codigo, p.nome, p.quantidade, `R$ ${p.valor}`, `R$ ${((Number(p.valor) || 0) * p.quantidade).toFixed(2).replace('.', ',')}`]);
+            docPdf.autoTable({ startY: 30, head: [['Cód', 'Produto', 'Qtd', 'Unit', 'Total']], body: body, theme: 'striped', headStyles: { fillColor: [51, 102, 153] }, foot: [['', '', '', 'TOTAL:', `R$ ${somaTotalGlobal.toFixed(2).replace('.', ',')}`]], footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' } });
+            docPdf.save(`Orcamento_${periodoId}.pdf`);
+        };
+
+        window.exportarLibreOffice = () => {
+            const mes = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
+            let html = `<table border="1" style="border-collapse:collapse; font-family:Arial;"><tr style="background:#336699; color:white; font-weight:bold;"><td colspan="5" style="padding:10px; text-align:center;">ORÇAMENTO: ${mes}</td></tr><tr style="font-weight:bold; background:#eee;"><td>Cód</td><td>Nome</td><td>Qtd</td><td>Unit</td><td>Total</td></tr>`;
+            carrinhoAtual.forEach(p => { const total = (Number(p.valor) || 0) * p.quantidade; html += `<tr><td>${p.codigo}</td><td>${p.nome}</td><td>${p.quantidade}</td><td>R$ ${p.valor}</td><td>R$ ${total.toFixed(2).replace('.', ',')}</td></tr>`; });
+            html += `<tr style="font-weight:bold;"><td colspan="4" style="text-align:right">TOTAL:</td><td>R$ ${somaTotalGlobal.toFixed(2).replace('.', ',')}</td></tr></table>`;
+            const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel' });
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Orcamento_${periodoId}.xls`; link.click();
+        };
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque Oficial - Mecânica App</title>
+    <style>
+        :root {
+            --bg: #e5e7eb;
+            --card-bg: #f8fafc;
+            --primary: #2563eb;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: #cbd5e1;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            margin: 0;
+            padding-top: 80px;
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        input#inputBusca {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+            font-size: 1rem;
+            outline: none;
+            background: #fff;
+        }
+
+        input#inputBusca:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .valor-cell {
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-action {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            padding: 5px;
+            transition: transform 0.2s;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.2);
+        }
+
+        #modalEdicao {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 95%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 2;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: var(--text);
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div style="font-weight: 800; color: var(--primary); font-size: 1.2rem;">⚙️ MECÂNICA APP</div>
+        <a href="../principal.html" style="text-decoration:none; color: var(--muted); font-weight: 600;">⬅ VOLTAR</a>
+    </nav>
+
+    <div class="container import">
+        <div class="card" style="margin-bottom: 20px; background: #eff6ff; border-color: #bfdbfe; display: none;">
+            /*deixando a parte de importação invisivel*/
+            <h3 style="margin-top:0; color: var(--primary); font-size: 1rem;">🚀 IMPORTAÇÃO OTIMIZADA (JSON)</h3>
+            <p style="font-size: 0.8rem; color: var(--muted);">Importação segura para grandes volumes. (Pausas
+                automáticas inclusas)</p>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="file" id="inputJson" accept=".json" style="font-size: 0.8rem;">
+                <button onclick="importarEmMassa()" id="btnImportar"
+                    style="background: var(--success); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    Iniciar Importação
+                </button>
+            </div>
+            <div id="progressoImport"
+                style="display:none; margin-top: 10px; font-weight: bold; color: var(--primary); font-size: 0.9rem;">
+                ⏳ Processando: <span id="contagem">0</span> itens salvos... **Não feche a página.**
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 id="tituloTabela"
+                style="margin-top:0; color: var(--primary); font-size: 1.1rem; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
+                📋 PRODUTOS EM ESTOQUE
+            </h2>
+
+            <input type="text" id="inputBusca"
+                placeholder="🔍 Digite Código ou Nome do Material para buscar em todo o banco...">
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Material</th>
+                            <th>Local</th>
+                            <th>Valor</th>
+                            <th style="width: 100px; text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela">
+                        <tr>
+                            <td colspan="5" style="text-align:center">Carregando estoque...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEdicao">
+        <div class="modal-content">
+            <h3>Editar Material</h3>
+            <input type="hidden" id="editId">
+            <label>Material</label><input type="text" id="editNome">
+            <label>Código</label><input type="text" id="editCodigo">
+            <label>Fornecedor</label><input type="text" id="editFornecedor">
+            <label>Local de Uso</label><input type="text" id="editLocal">
+            <label>Valor (R$)</label><input type="number" step="0.01" id="editValor">
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-save" onclick="salvarAlteracao()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, doc, deleteDoc, updateDoc, writeBatch, limit, orderBy, where, getDocs, startAt, endAt } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
+            authDomain: "mecanica-699bb.firebaseapp.com",
+            projectId: "mecanica-699bb",
+            storageBucket: "mecanica-699bb.firebasestorage.app",
+            messagingSenderId: "223675812288",
+            appId: "1:223675812288:web:f91f3dab6705fa7a2aa025",
+            measurementId: "G-G78PR55F9F"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let produtosExibidos = [];
+        let isImporting = false;
+        let timeoutBusca = null;
+        const corpoTabela = document.getElementById('corpoTabela');
+
+        // --- FUNÇÃO DE IMPORTAÇÃO (CADENCIADA) ---
+        window.importarEmMassa = async () => {
+            const fileInput = document.getElementById('inputJson');
+            const btn = document.getElementById('btnImportar');
+            const progressoDiv = document.getElementById('progressoImport');
+            const contagemSpan = document.getElementById('contagem');
+
+            if (!fileInput.files[0]) return alert("Selecione o arquivo JSON!");
+            if (isImporting) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const dados = JSON.parse(e.target.result);
+                    isImporting = true;
+                    btn.disabled = true;
+                    progressoDiv.style.display = "block";
+                    corpoTabela.innerHTML = "<tr><td colspan='5' style='text-align:center; color:blue;'><b>IMPORTAÇÃO EM ANDAMENTO... POR FAVOR AGUARDE.</b></td></tr>";
+
+                    const total = dados.length;
+                    let processados = 0;
+
+                    for (let i = 0; i < total; i += 500) {
+                        const batch = writeBatch(db);
+                        const lote = dados.slice(i, i + 500);
+
+                        lote.forEach(item => {
+                            let valorNum = 0;
+                            if (item.Valor) {
+                                let v = String(item.Valor).replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
+                                valorNum = parseFloat(v) || 0;
+                            }
+                            const novaRef = doc(collection(db, "produtos"));
+                            batch.set(novaRef, {
+                                codigo: String(item.CODIGO || ""),
+                                nome: String(item.MATERIAL || "Sem Nome").toUpperCase(),
+                                fornecedor: String(item.FORNECEDOR || ""),
+                                localUso: String(item["LOCAL DE USO"] || ""),
+                                valor: valorNum,
+                                dataCriacao: new Date()
+                            });
+                        });
+
+                        await batch.commit();
+                        processados += lote.length;
+                        contagemSpan.innerText = processados;
+                        await new Promise(r => setTimeout(r, 400)); // Pausa para não travar
+                    }
+
+                    alert("✅ " + processados + " itens importados!");
+                    location.reload();
+                } catch (err) { alert("Erro: " + err.message); isImporting = false; }
+            };
+            reader.readAsText(fileInput.files[0]);
+        };
+
+        // --- BUSCA GLOBAL (QUERY NO BANCO) ---
+        document.getElementById('inputBusca').addEventListener('input', (e) => {
+            const termo = e.target.value.trim();
+            clearTimeout(timeoutBusca);
+
+            timeoutBusca = setTimeout(async () => {
+                if (termo.length === 0) {
+                    recarregarPadrao();
+                    return;
+                }
+
+                if (termo.length < 2) return;
+
+                corpoTabela.innerHTML = "<tr><td colspan='5' style='text-align:center'>🔍 Buscando no banco completo...</td></tr>";
+                const termoUpper = termo.toUpperCase();
+
+                try {
+                    let resultados = [];
+
+                    // 1. Tenta buscar por Código Exato
+                    const qCod = query(collection(db, "produtos"), where("codigo", "==", termo), limit(10));
+                    const snapCod = await getDocs(qCod);
+                    snapCod.forEach(d => resultados.push({ id: d.id, ...d.data() }));
+
+                    // 2. Se poucos resultados, busca por Nome (começando com...)
+                    if (resultados.length < 5) {
+                        const qNome = query(
+                            collection(db, "produtos"),
+                            orderBy("nome"),
+                            startAt(termoUpper),
+                            endAt(termoUpper + '\uf8ff'),
+                            limit(20)
+                        );
+                        const snapNome = await getDocs(qNome);
+                        snapNome.forEach(d => {
+                            if (!resultados.find(r => r.id === d.id)) resultados.push({ id: d.id, ...d.data() });
+                        });
+                    }
+
+                    document.getElementById('tituloTabela').innerText = `📋 RESULTADOS DA BUSCA (${resultados.length})`;
+                    renderizar(resultados);
+                } catch (err) { console.error(err); }
+            }, 600);
+        });
+
+        // --- CARREGAMENTO INICIAL (ÚLTIMOS 100) ---
+        async function recarregarPadrao() {
+            if (isImporting) return;
+            document.getElementById('tituloTabela').innerText = "📋 ÚLTIMOS PRODUTOS (Exibindo 100)";
+            const q = query(collection(db, "produtos"), orderBy("dataCriacao", "desc"), limit(100));
+            const snap = await getDocs(q);
+            produtosExibidos = [];
+            snap.forEach(d => produtosExibidos.push({ id: d.id, ...d.data() }));
+            renderizar(produtosExibidos);
+        }
+
+        function renderizar(lista) {
+            corpoTabela.innerHTML = "";
+            if (lista.length === 0) {
+                corpoTabela.innerHTML = "<tr><td colspan='5' style='text-align:center'>Nenhum item encontrado.</td></tr>";
+                return;
+            }
+            lista.forEach(p => {
+                corpoTabela.innerHTML += `
+                    <tr>
+                        <td><strong>${p.codigo || '---'}</strong></td>
+                        <td>${p.nome}</td>
+                        <td>${p.localUso || '---'}</td>
+                        <td class="valor-cell">R$ ${Number(p.valor || 0).toFixed(2)}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn-action" onclick="abrirEdicaoGlobal('${p.id}')">✏️</button>
+                                <button class="btn-action" onclick="excluirItem('${p.id}')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            // Guardar para edição
+            window.listaAtualParaEdicao = lista;
+        }
+
+        // --- INTERFACE ---
+        window.abrirEdicaoGlobal = (id) => {
+            const item = window.listaAtualParaEdicao.find(p => p.id === id);
+            if (item) {
+                document.getElementById('editId').value = id;
+                document.getElementById('editNome').value = item.nome;
+                document.getElementById('editCodigo').value = item.codigo;
+                document.getElementById('editFornecedor').value = item.fornecedor || '';
+                document.getElementById('editLocal').value = item.localUso;
+                document.getElementById('editValor').value = item.valor;
+                document.getElementById('modalEdicao').style.display = 'flex';
+            }
+        };
+
+        window.fecharModal = () => document.getElementById('modalEdicao').style.display = 'none';
+
+        window.salvarAlteracao = async () => {
+            const id = document.getElementById('editId').value;
+            try {
+                await updateDoc(doc(db, "produtos", id), {
+                    nome: document.getElementById('editNome').value.toUpperCase(),
+                    codigo: document.getElementById('editCodigo').value,
+                    fornecedor: document.getElementById('editFornecedor').value,
+                    localUso: document.getElementById('editLocal').value,
+                    valor: parseFloat(document.getElementById('editValor').value) || 0
+                });
+                alert("Atualizado!");
+                fecharModal();
+                recarregarPadrao();
+            } catch (e) { alert("Erro ao salvar."); }
+        };
+
+        window.excluirItem = async (id) => {
+            if (confirm("Excluir item permanentemente?")) {
+                await deleteDoc(doc(db, "produtos", id));
+                recarregarPadrao();
+            }
+        };
+
+        // Início
+        recarregarPadrao();
+    </script>
+</body>
+
+</html>

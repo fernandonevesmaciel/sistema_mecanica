@@ -58,7 +58,7 @@
 
     <nav class="navbar shadow-sm">
         <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">
-           ⚙️ MECÂNICA APP
+            ⚙️ MECÂNICA APP
         </div>
         <a href="../principal.html"
             class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors tracking-tighter">Voltar
@@ -130,7 +130,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
@@ -148,29 +148,38 @@
         let limiteGlobal = 0;
         let gastosGlobais = 0;
         let itensAtuais = [];
+        let unsub = null; // Para limpar o monitoramento anterior ao trocar de mês
 
         async function init() {
             const d = new Date();
             document.getElementById('selectMes').value = String(d.getMonth() + 1).padStart(2, '0');
             document.getElementById('selectAno').value = d.getFullYear();
 
-            onSnapshot(doc(db, "configuracoes", "orcamento"), (docSnap) => {
-                limiteGlobal = docSnap.exists() ? docSnap.data().valor : 200000;
-                carregarOrcamento();
-            });
+            carregarOrcamento();
         }
 
-        window.carregarOrcamento = async () => {
+        window.carregarOrcamento = () => {
             const mes = document.getElementById('selectMes').value;
             const ano = document.getElementById('selectAno').value;
             const periodoId = `${mes}-${ano}`;
             const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             document.getElementById('periodoTexto').innerText = `${mesNome} / ${ano}`;
 
-            const docRef = doc(db, "listas_mensais", periodoId);
-            const docSnap = await getDoc(docRef);
-            itensAtuais = docSnap.exists() ? (docSnap.data().itens || []) : [];
-            renderizarDashboard(itensAtuais);
+            // Se já houver um monitoramento ativo, cancela ele antes de começar o novo mês
+            if (unsub) unsub();
+
+            // Escuta em TEMPO REAL o documento do mês selecionado
+            unsub = onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
+                if (docSnap.exists()) {
+                    const dados = docSnap.data();
+                    itensAtuais = dados.itens || [];
+                    limiteGlobal = dados.meta || 0;
+                } else {
+                    itensAtuais = [];
+                    limiteGlobal = 0;
+                }
+                renderizarDashboard(itensAtuais);
+            });
         };
 
         function renderizarDashboard(itens) {
@@ -184,11 +193,11 @@
                     const sub = (Number(p.valor) || 0) * (p.quantidade || 1);
                     gastosGlobais += sub;
                     return `
-                    <li class="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors">
-                        <div><p class="text-sm font-bold text-slate-700 leading-tight">${p.nome}</p>
-                        <p class="text-[10px] text-slate-400 font-black uppercase mt-1">${p.quantidade} un x R$ ${p.valor}</p></div>
-                        <span class="text-sm font-black text-slate-800">R$ ${sub.toFixed(2).replace('.', ',')}</span>
-                    </li>`;
+                <li class="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors">
+                    <div><p class="text-sm font-bold text-slate-700 leading-tight">${p.nome}</p>
+                    <p class="text-[10px] text-slate-400 font-black uppercase mt-1">${p.quantidade} un x R$ ${p.valor}</p></div>
+                    <span class="text-sm font-black text-slate-800">R$ ${sub.toFixed(2).replace('.', ',')}</span>
+                </li>`;
                 }).join('');
             }
 
@@ -202,7 +211,7 @@
             saldoUI.className = "text-2xl font-black " + (saldo >= 0 ? "positivo" : "negativo");
         }
 
-        // FUNÇÃO EXPORTAR PDF DASHBOARD
+      // FUNÇÃO EXPORTAR PDF DASHBOARD
         window.gerarPdfDashboard = () => {
             if (itensAtuais.length === 0) return alert("Nada para exportar!");
             const { jsPDF } = window.jspdf;
@@ -214,16 +223,16 @@
             docPdf.text("RELATÓRIO FINANCEIRO MENSAL", 14, 20);
             docPdf.setFontSize(12);
             docPdf.text(`Período: ${mes} / ${ano}`, 14, 28);
-            docPdf.text(`Meta Orçamentária: R$ ${limiteGlobal.toFixed(2).replace('.', ',')}`, 14, 34);
-            docPdf.text(`Gasto Total: R$ ${gastosGlobais.toFixed(2).replace('.', ',')}`, 14, 40);
-
+            docPdf.text(`Meta Orçamentária: R$ ${limiteGlobal.toFixed(2).replace('.',',')}`, 14, 34);
+            docPdf.text(`Gasto Total: R$ ${gastosGlobais.toFixed(2).replace('.',',')}`, 14, 40);
+            
             const saldo = limiteGlobal - gastosGlobais;
             docPdf.setTextColor(saldo >= 0 ? 16 : 239, saldo >= 0 ? 185 : 68, saldo >= 0 ? 129 : 68);
-            docPdf.text(`SALDO FINAL: R$ ${saldo.toFixed(2).replace('.', ',')}`, 14, 46);
+            docPdf.text(`SALDO FINAL: R$ ${saldo.toFixed(2).replace('.',',')}`, 14, 46);
             docPdf.setTextColor(0, 0, 0);
 
             const body = itensAtuais.map(p => [
-                p.nome, p.quantidade, `R$ ${p.valor}`, `R$ ${((Number(p.valor) || 0) * p.quantidade).toFixed(2).replace('.', ',')}`
+                p.nome, p.quantidade, `R$ ${p.valor}`, `R$ ${((Number(p.valor)||0)*p.quantidade).toFixed(2).replace('.',',')}`
             ]);
 
             docPdf.autoTable({

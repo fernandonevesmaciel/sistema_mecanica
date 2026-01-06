@@ -219,22 +219,25 @@
             const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             document.getElementById('labelPeriodo').innerText = `Orçamento: ${mesNome} / ${ano}`;
 
+            // O onSnapshot garante o "Tempo Real": se mudar no Firebase, muda na tela na hora
             onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
                 if (docSnap.exists()) {
-                    carrinhoAtual = docSnap.data().itens || [];
-                    valorLimiteDesteMes = docSnap.data().meta !== undefined ? docSnap.data().meta : 200000;
+                    const dados = docSnap.data();
+                    carrinhoAtual = dados.itens || [];
+                    // Pega a meta do mês específico
+                    valorLimiteDesteMes = dados.meta !== undefined ? dados.meta : 0;
                 } else {
                     carrinhoAtual = [];
-                    valorLimiteDesteMes = 200000;
+                    valorLimiteDesteMes = 0;
                 }
 
                 const input = document.getElementById('limiteOrcamento');
+                // Só atualiza o valor do input se o usuário não estiver digitando nele agora
                 if (document.activeElement !== input) {
                     input.value = valorLimiteDesteMes.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
                 }
 
                 renderizarCarrinho();
-                // Atualiza a busca se houver algo digitado para refletir os botões "Adicionar/Remover"
                 monitorarBusca(document.getElementById('inputBusca').value);
             });
         };

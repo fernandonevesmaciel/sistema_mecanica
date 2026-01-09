@@ -1,300 +1,69 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciador de Compras - Mecânica</title>
+    <title>⚡ Compras Realizadas - Elétrica App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #2563eb;
-            --bg: #f8fafc;
-            --text: #1e293b;
-            --status-solicitacao: #fef9c3;
-            --text-solicitacao: #854d0e;
-            --status-liberado: #f1f5f9;
-            --text-liberado: #475569;
-            --status-pedido: #dbeafe;
-            --text-pedido: #1e40af;
-            --status-cancelado: #fee2e2;
-            --text-cancelado: #991b1b;
-            --status-atendido: #dcfce7;
-            --text-atendido: #166534;
-        }
+        :root { --primary: #2563eb; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); }
+        
+        /* Cores de Status */
+        .status-solicitacao { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+        .status-liberado { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .status-pedido { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .status-cancelado { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .status-atendido { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-parcial { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
 
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 750px;
-            margin-top: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .grid-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .full-width {
-            grid-column: span 2;
-        }
-
-        input,
-        select {
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 14px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #64748b;
-            margin-bottom: 4px;
-            display: block;
-        }
-
-        .btn-add {
-            background: var(--primary);
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        /* Barra de Busca e Filtros */
-        .search-area {
-            background: #fff;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 10px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .compra-card {
-            background: white;
-            padding: 16px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            margin-bottom: 15px;
-            border-left: 6px solid var(--primary);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .info h3 {
-            margin: 0;
-            color: var(--primary);
-            font-size: 17px;
-        }
-
-        .detalhes {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 5px;
-            font-size: 13px;
-            color: #475569;
-        }
-
-        .badge {
-            font-size: 10px;
-            font-weight: bold;
-            padding: 4px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-        }
-
-        .valor-total {
-            font-weight: bold;
-            color: #059669;
-            font-size: 16px;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            border-top: 1px solid #f1f5f9;
-            padding-top: 10px;
-        }
-
-        .btn-action {
-            padding: 6px 10px;
-            border-radius: 4px;
-            border: none;
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .btn-status {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .btn-delete {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-solicitacao {
-            background: var(--status-solicitacao);
-            color: var(--text-solicitacao);
-        }
-
-        .status-liberado {
-            background: var(--status-liberado);
-            color: var(--text-liberado);
-        }
-
-        .status-pedido {
-            background: var(--status-pedido);
-            color: var(--text-pedido);
-        }
-
-        .status-cancelado {
-            background: var(--status-cancelado);
-            color: var(--text-cancelado);
-        }
-
-        .status-atendido {
-            background: var(--status-atendido);
-            color: var(--text-atendido);
-        }
-
-
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            height: 60px;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2rem;
-            z-index: 1000;
-            box-sizing: border-box;
-        }
-
-        a {
-            text-decoration: none;
-        }
+        .navbar { position: fixed; top: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-sizing: border-box; }
+        .compra-card { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .compra-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
+        .obs-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; }
+        .obs-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        /* Estilo para os inputs de filtro */
+        .filter-control { background: white; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; }
+        .filter-control:focus { border-color: #2563eb; ring: 2px ring #dbeafe; }
     </style>
 </head>
+<body class="pt-24 pb-12 px-4">
 
-<body>
-
-    <nav class="navbar shadow-sm">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">
-           ⚙️ MECÂNICA APP
-        </div>
-        <a href="../principal.html"
-            class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors tracking-tighter">Voltar
-            ao Início</a>
+    <nav class="navbar">
+        <div class="flex items-center gap-2" style="font-weight: 800; color: #2563eb; font-size: 1.25rem;"><span>⚡</span> ELÉTRICA APP</div>
+        <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-bold text-sm tracking-tight uppercase">Voltar ao Início</a>
     </nav>
 
-    <div class="container">
-        <h2>📦 Registrar compra ou pedido realizado.</h2>
-        <div class="card">
-            <form id="compraForm" class="grid-form">
-                <div class="full-width">
-                    <label>Código (Preenche automático)</label>
-                    <input type="text" id="codigo" placeholder="Digite o código para buscar...">
-                </div>
-                <div class="full-width">
-                    <label>Descrição do Material</label>
-                    <input type="text" id="nome" required>
-                </div>
-                <div>
-                    <label>Local de Uso</label>
-                    <input type="text" id="local">
-                </div>
-                <div>
-                    <label>Quantidade</label>
-                    <input type="number" id="quantidade" value="1" min="1" required>
-                </div>
-                <div>
-                    <label>Valor Unitário (R$)</label>
-                    <input type="number" id="valorUnitario" step="0.01" required>
-                </div>
-                <div>
-                    <label>Data</label>
-                    <input type="date" id="data" required>
-                </div>
-                <div class="full-width">
-                    <label>Status Inicial</label>
-                    <select id="status">
-                        <option value="solicitacao">Realizar Solicitação</option>
-                        <option value="liberado">Liberado</option>
-                        <option value="pedido">Pedido Gerado</option>
-                        <option value="cancelado">Cancelado</option>
-                        <option value="atendido">Atendido</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-add">Salvar Compra</button>
-            </form>
-        </div>
-
-        <h2>📋 Histórico de Pedidos</h2>
-
-        <div class="search-area">
+    <div class="max-w-5xl mx-auto">
+        <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-                <label>Buscar Nome ou Código</label>
-                <input type="text" id="inputBusca" placeholder="Ex: Cabo ou EL-001" onkeyup="filtrarCompras()">
+                <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">📦 Histórico de Compras Realizadas</h1>
+                <p class="text-slate-400 text-sm font-medium">Gerenciamento de status e observações em tempo real.</p>
             </div>
-            <div>
-                <label>Filtrar por Status</label>
-                <select id="filtroStatus" onchange="filtrarCompras()">
+
+            <div class="flex flex-wrap gap-2">
+                <input type="text" id="inputBusca" placeholder="Buscar nome ou código..." class="filter-control w-full md:w-64">
+                <select id="filtroStatus" class="filter-control">
                     <option value="todos">Todos os Status</option>
-                    <option value="solicitacao">Realizar Solicitação</option>
+                    <option value="solicitacao">Solicitação</option>
                     <option value="liberado">Liberado</option>
                     <option value="pedido">Pedido Gerado</option>
                     <option value="cancelado">Cancelado</option>
                     <option value="atendido">Atendido</option>
+                    <option value="parcial">Parcial</option>
                 </select>
             </div>
         </div>
 
-        <div id="listaCompras"></div>
+        <div id="listaCompras" class="grid gap-4">
+            <div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">Carregando registros...</div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
@@ -309,155 +78,109 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const comprasRef = collection(db, "compras");
-        const produtosRef = collection(db, "produtos");
-        let todasAsCompras = [];
 
-        // --- AUTOCOMPLETAR ---
-        document.getElementById('codigo').addEventListener('input', async (e) => {
-            const cod = e.target.value.trim();
-            if (cod.length >= 2) {
-                const q = query(produtosRef, where("codigo", "==", cod), limit(1));
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    const p = snap.docs[0].data();
-                    document.getElementById('nome').value = p.nome;
-                    document.getElementById('valorUnitario').value = p.valor;
-                    e.target.style.background = "#dcfce7";
-                } else {
-                    e.target.style.background = "#fff";
-                }
-            }
-        });
+        let todosRegistros = []; // Cache local para busca instantânea
 
-        // --- SALVAR ---
-        document.getElementById('compraForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const qtd = parseFloat(document.getElementById('quantidade').value);
-            const unit = parseFloat(document.getElementById('valorUnitario').value);
-
-            await addDoc(comprasRef, {
-                nome: document.getElementById('nome').value,
-                codigo: document.getElementById('codigo').value,
-                local: document.getElementById('local').value,
-                quantidade: qtd,
-                valorUnitario: unit,
-                valorTotal: qtd * unit,
-                data: document.getElementById('data').value,
-                status: document.getElementById('status').value,
-                dataCriacao: new Date()
-            });
-            e.target.reset();
-            carregarCompras();
-        });
-
-        // --- FILTRAGEM AVANÇADA ---
-        window.filtrarCompras = async () => {
-            const termo = document.getElementById('inputBusca').value.toLowerCase();
+        // Função para renderizar a lista com filtros aplicados
+        const renderizarLista = () => {
+            const container = document.getElementById('listaCompras');
+            const busca = document.getElementById('inputBusca').value.toLowerCase();
             const statusFiltro = document.getElementById('filtroStatus').value;
-            const lista = document.getElementById('listaCompras');
 
-            // Se a busca e o filtro estiverem vazios, voltamos para os 10 recentes
-            if (termo === "" && statusFiltro === "todos") {
-                carregarCompras();
+            const filtrados = todosRegistros.filter(item => {
+                const nome = item.nome?.toLowerCase() || "";
+                const codigo = item.codigo?.toLowerCase() || "";
+                const status = item.status || "";
+                
+                const matchesBusca = nome.includes(busca) || codigo.includes(busca);
+                const matchesStatus = statusFiltro === "todos" || status === statusFiltro;
+
+                return matchesBusca && matchesStatus;
+            });
+
+            if (filtrados.length === 0) {
+                container.innerHTML = `<div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">Nenhum registro encontrado</div>`;
                 return;
             }
 
-            lista.innerHTML = "<p style='text-align:center'>Buscando no banco completo...</p>";
-
-            try {
-                // Criamos uma query dinâmica para a busca
-                let q = query(comprasRef, orderBy("dataCriacao", "desc"));
-
-                // Nota: O Firestore tem limitações para filtros de texto parcial ("contém").
-                // Para manter a busca simples e funcional, buscamos todos e filtramos no cliente,
-                // mas você também pode adicionar cláusulas where() aqui para otimizar por Status.
-
-                if (statusFiltro !== "todos") {
-                    q = query(comprasRef, where("status", "==", statusFiltro), orderBy("dataCriacao", "desc"));
-                }
-
-                const snap = await getDocs(q);
-                const resultados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-                // Filtro de texto no lado do cliente sobre os resultados do banco
-                const filtrados = resultados.filter(c => {
-                    return c.nome.toLowerCase().includes(termo) ||
-                        (c.codigo && c.codigo.toLowerCase().includes(termo));
-                });
-
-                renderizarLista(filtrados);
-            } catch (err) {
-                console.error("Erro na busca:", err);
-            }
-        };
-
-        async function carregarCompras() {
-            const lista = document.getElementById('listaCompras');
-            lista.innerHTML = "<p style='text-align:center'>Carregando os mais recentes...</p>";
-
-            try {
-                // Mudança aqui: Adicionamos o limit(10) para não pesar no início
-                const q = query(comprasRef, orderBy("dataCriacao", "desc"), limit(10));
-                const snap = await getDocs(q);
-
-                todasAsCompras = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderizarLista(todasAsCompras);
-
-                console.log("Foram carregados os 10 registros mais recentes.");
-            } catch (err) {
-                console.error("Erro ao carregar:", err);
-                lista.innerHTML = "Erro ao carregar dados.";
-            }
-        }
-
-        const statusConfig = {
-            solicitacao: { label: "Realizar Solicitação", class: "status-solicitacao" },
-            liberado: { label: "Liberado", class: "status-liberado" },
-            pedido: { label: "Pedido Gerado", class: "status-pedido" },
-            cancelado: { label: "Cancelado", class: "status-cancelado" },
-            atendido: { label: "Atendido", class: "status-atendido" }
-        };
-
-        function renderizarLista(dados) {
-            const lista = document.getElementById('listaCompras');
-            lista.innerHTML = "";
-            dados.forEach(item => {
-                const config = statusConfig[item.status] || statusConfig.solicitacao;
-                const div = document.createElement('div');
-                div.className = 'compra-card';
-                div.innerHTML = `
-                    <div class="card-header">
-                        <div class="info">
-                            <h3>${item.nome} <small style="color:#64748b">#${item.codigo || 'S/C'}</small></h3>
-                            <span class="badge ${config.class}">${config.label}</span>
+            container.innerHTML = "";
+            filtrados.forEach(item => {
+                const statusClass = `status-${item.status}`;
+                const card = document.createElement('div');
+                card.className = 'compra-card p-5';
+                card.innerHTML = `
+                    <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cód: ${item.codigo || 'S/C'}</div>
+                            <h3 class="text-lg font-bold text-slate-800 leading-tight">${item.nome}</h3>
+                            <div class="text-[11px] font-bold text-blue-500 uppercase mt-1">${item.local || 'Geral'}</div>
                         </div>
-                        <div class="valor-total">R$ ${item.valorTotal.toFixed(2)}</div>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
+                            <div><div class="text-[9px] font-black text-slate-300 uppercase">Qtd</div><div class="font-bold text-slate-700">${item.quantidade}</div></div>
+                            <div><div class="text-[9px] font-black text-slate-300 uppercase">Total</div><div class="font-bold text-green-600">R$ ${parseFloat(item.valorTotal).toFixed(2)}</div></div>
+                            <div class="col-span-2 sm:col-span-1">
+                                <select onchange="window.atualizarStatus('${item.id}', this.value)" 
+                                    class="text-[10px] font-black uppercase px-3 py-2 rounded-lg outline-none cursor-pointer transition-colors ${statusClass}">
+                                    <option value="solicitacao" ${item.status === 'solicitacao' ? 'selected' : ''}>Solicitação</option>
+                                    <option value="liberado" ${item.status === 'liberado' ? 'selected' : ''}>Liberado</option>
+                                    <option value="pedido" ${item.status === 'pedido' ? 'selected' : ''}>Pedido Gerado</option>
+                                    <option value="cancelado" ${item.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                                    <option value="atendido" ${item.status === 'atendido' ? 'selected' : ''}>Atendido</option>
+                                    <option value="parcial" ${item.status === 'parcial' ? 'selected' : ''}>Parcial</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="detalhes">
-                        <span>📍 Local: ${item.local || '---'}</span>
-                        <span>📅 Data: ${item.data.split('-').reverse().join('/')}</span>
-                        <span>📦 Qtd: ${item.quantidade}</span>
-                        <span>💰 Unit: R$ ${item.valorUnitario.toFixed(2)}</span>
-                    </div>
-                    <div class="actions">
-                        <button class="btn-action btn-status" onclick="editarStatus('${item.id}')">Status</button>
-                        <button class="btn-action btn-delete" onclick="excluirCompra('${item.id}')">Excluir</button>
+
+                    <div class="flex gap-3 items-center">
+                        <div class="flex-1">
+                            <input type="text" class="obs-input bg-slate-50" 
+                                placeholder="Adicionar observação técnica..." 
+                                value="${item.observacao || ''}" 
+                                onchange="window.atualizarObs('${item.id}', this.value)">
+                        </div>
+                        <button onclick="window.excluir('${item.id}')" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
                     </div>
                 `;
-                lista.appendChild(div);
+                container.appendChild(card);
             });
-        }
-
-        window.editarStatus = async (id) => {
-            const n = prompt("1: Solicitação | 2: Liberado | 3: Pedido | 4: Cancelado | 5: Atendido");
-            const mapa = { "1": "solicitacao", "2": "liberado", "3": "pedido", "4": "cancelado", "5": "atendido" };
-            if (mapa[n]) { await updateDoc(doc(db, "compras", id), { status: mapa[n] }); carregarCompras(); }
         };
 
-        window.excluirCompra = async (id) => { if (confirm("Excluir?")) { await deleteDoc(doc(db, "compras", id)); carregarCompras(); } };
+        // Escutar mudanças no Banco (Tempo Real)
+        onSnapshot(query(comprasRef, orderBy("dataCriacao", "desc")), (snap) => {
+            todosRegistros = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderizarLista();
+        });
 
-        carregarCompras();
+        // Listeners para os filtros
+        document.getElementById('inputBusca').addEventListener('input', renderizarLista);
+        document.getElementById('filtroStatus').addEventListener('change', renderizarLista);
+
+        // Funções Globais
+        window.atualizarStatus = async (id, novoStatus) => {
+            try {
+                await updateDoc(doc(db, "compras", id), { status: novoStatus });
+            } catch (e) { console.error("Erro ao atualizar status:", e); }
+        };
+
+        window.atualizarObs = async (id, texto) => {
+            try {
+                await updateDoc(doc(db, "compras", id), { observacao: texto });
+            } catch (e) { console.error("Erro ao atualizar OBS:", e); }
+        };
+
+        window.excluir = async (id) => {
+            if(confirm("Deseja excluir permanentemente este registro?")) {
+                try {
+                    await deleteDoc(doc(db, "compras", id));
+                } catch (e) { console.error("Erro ao excluir:", e); }
+            }
+        };
     </script>
 </body>
-
 </html>

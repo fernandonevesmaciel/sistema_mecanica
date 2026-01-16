@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ Compras Realizadas - Elétrica App</title>
+    <title>⚙️ Compras Realizadas - MECÂNICA App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; }
@@ -31,7 +31,7 @@
 <body class="pt-24 pb-12 px-4">
 
     <nav class="navbar">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: #2563eb; font-size: 1.25rem;"><span>⚡</span> ELÉTRICA APP</div>
+        <div class="flex items-center gap-2" style="font-weight: 800; color: #2563eb; font-size: 1.25rem;">⚙️ MECÂNICA APP</div>
         <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-bold text-sm tracking-tight uppercase">Voltar ao Início</a>
     </nav>
 
@@ -43,7 +43,7 @@
             </div>
 
             <div class="flex flex-wrap gap-2">
-                <input type="text" id="inputBusca" placeholder="Buscar nome ou código..." class="filter-control w-full md:w-64">
+                <input type="text" id="inputBusca" placeholder="Buscar nome, código ou nimbi..." class="filter-control w-full md:w-64">
                 <select id="filtroStatus" class="filter-control">
                     <option value="todos">Todos os Status</option>
                     <option value="solicitacao">Solicitação</option>
@@ -90,9 +90,11 @@
             const filtrados = todosRegistros.filter(item => {
                 const nome = item.nome?.toLowerCase() || "";
                 const codigo = item.codigo?.toLowerCase() || "";
+                // ALTERADO: agora busca por 'codigoNimbi'
+                const nimbi = item.codigoNimbi?.toLowerCase() || "";
                 const status = item.status || "";
                 
-                const matchesBusca = nome.includes(busca) || codigo.includes(busca);
+                const matchesBusca = nome.includes(busca) || codigo.includes(busca) || nimbi.includes(busca);
                 const matchesStatus = statusFiltro === "todos" || status === statusFiltro;
 
                 return matchesBusca && matchesStatus;
@@ -106,12 +108,20 @@
             container.innerHTML = "";
             filtrados.forEach(item => {
                 const statusClass = `status-${item.status}`;
+                
+                // ALTERADO: Lógica para exibir o Nimbi apenas se ele existir
+                const nimbiDisplay = item.codigoNimbi 
+                    ? `<span class="text-purple-500 ml-2">| Nimbi: ${item.codigoNimbi}</span>` 
+                    : '';
+
                 const card = document.createElement('div');
                 card.className = 'compra-card p-5';
                 card.innerHTML = `
                     <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
                         <div class="flex-1 min-w-[200px]">
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cód: ${item.codigo || 'S/C'}</div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                                Cód: ${item.codigo || 'S/C'} ${nimbiDisplay}
+                            </div>
                             <h3 class="text-lg font-bold text-slate-800 leading-tight">${item.nome}</h3>
                             <div class="text-[11px] font-bold text-blue-500 uppercase mt-1">${item.local || 'Geral'}</div>
                         </div>

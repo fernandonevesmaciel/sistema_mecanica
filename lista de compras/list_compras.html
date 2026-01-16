@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ Elétrica App - Oficial</title>
+    <title>⚙️ Mecânica App - Oficial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -22,7 +22,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen px-4 pb-12">
     <nav class="navbar shadow-sm">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>⚡</span> ELÉTRICA APP</div>
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">⚙️ MECÂNICA APP</div>
         <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
     </nav>
 
@@ -155,7 +155,12 @@
                 <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-blue-200">
                     <p class="font-bold text-slate-800 text-sm leading-tight">${p.nome}</p>
                     <p class="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-tighter">Cód: ${p.codigo} | Unit: R$ ${p.valor}</p>
-                    <input type="text" id="local-${p.id}" placeholder="Local de uso (ex: Setor A)" class="w-full p-2 mt-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-blue-400">
+                    
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <input type="text" id="local-${p.id}" placeholder="Local (ex: Setor A)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-blue-400">
+                        <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi (Opc)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-blue-400">
+                    </div>
+
                     <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
                         <input type="number" id="qtd-${p.id}" value="1" min="1" class="w-16 p-2 bg-slate-100 border rounded-lg text-sm font-bold text-center outline-none">
                         <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md ${jaEstaNoCarrinho ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100'}">${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}</button>
@@ -168,22 +173,25 @@
             const prod = todosProdutos.find(p => p.id === id);
             const qtd = parseInt(document.getElementById(`qtd-${id}`).value) || 1;
             const localUso = document.getElementById(`local-${id}`).value || "Geral";
+            const codNimbi = document.getElementById(`nimbi-${id}`).value || "";
+            
             const valorUnit = parseFloat(String(prod.valor).replace(',', '.'));
             
             if (!carrinhoAtual.some(i => i.id === id)) {
-                const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd, local: localUso }];
+                const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd, local: localUso, codigoNimbi: codNimbi }];
                 await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
 
                 await addDoc(collection(db, "compras"), {
                     nome: prod.nome,
                     codigo: prod.codigo || "S/C",
+                    codigoNimbi: codNimbi,
                     local: localUso,
                     quantidade: qtd,
                     valorUnitario: valorUnit,
                     valorTotal: valorUnit * qtd,
                     data: new Date().toISOString().split('T')[0],
                     status: "solicitacao",
-                    observacao: "",
+                    observacao: codNimbi ? `Nimbi: ${codNimbi}` : "",
                     dataCriacao: new Date()
                 });
             }
@@ -204,11 +212,12 @@
             docPdf.setFontSize(16);
             docPdf.text(`Orçamento Elétrica: ${mesRef} / ${anoRef}`, 14, 15);
             
-            const colunas = ["Cód", "Produto", "Local", "Qtd", "Unit", "Total"];
+            const colunas = ["Cód", "Nimbi", "Produto", "Local", "Qtd", "Unit", "Total"];
             const linhas = carrinhoAtual.map(item => {
                 const vUnit = parseFloat(String(item.valor).replace(',', '.'));
                 return [
                     item.codigo || "-", 
+                    item.codigoNimbi || "-",
                     item.nome, 
                     item.local || "Geral", 
                     item.quantidade,
@@ -222,7 +231,8 @@
                 body: linhas, 
                 startY: 25,
                 theme: 'striped',
-                headStyles: { fillColor: [59, 130, 246] }
+                headStyles: { fillColor: [59, 130, 246] },
+                styles: { fontSize: 8 }
             });
 
             docPdf.text(`Subtotal Acumulado: ${document.getElementById('totalPreco').innerText}`, 14, docPdf.lastAutoTable.finalY + 10);
@@ -236,11 +246,11 @@
             const mesRef = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             const anoRef = document.getElementById('selectAno').value;
 
-            // Mapeia os dados para formato de planilha
             const dadosExcel = carrinhoAtual.map(item => {
                 const vUnit = parseFloat(String(item.valor).replace(',', '.'));
                 return {
                     "Código": item.codigo || "S/C",
+                    "Cód. Nimbi": item.codigoNimbi || "",
                     "Descrição do Produto": item.nome,
                     "Local de Aplicação": item.local || "Geral",
                     "Qtd": item.quantidade,
@@ -252,9 +262,8 @@
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(dadosExcel);
 
-            // Ajuste de largura das colunas
             ws['!cols'] = [
-                { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }
+                { wch: 15 }, { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }
             ];
 
             XLSX.utils.book_append_sheet(wb, ws, "Orcamento");
@@ -273,13 +282,20 @@
             ui.innerHTML = carrinhoAtual.map(p => {
                 const totalLinha = (parseFloat(String(p.valor).replace(',', '.')) || 0) * (p.quantidade || 1);
                 somaTotalGlobal += totalLinha;
+                
+                // Exibe etiqueta Nimbi se existir
+                const nimbiHtml = p.codigoNimbi ? `<span class="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold uppercase border border-purple-100">Nimbi: ${p.codigoNimbi}</span>` : '';
+
                 return `
                 <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors">
                     <div>
                         <p class="text-sm font-bold text-slate-700 leading-tight">${p.nome}</p>
-                        <div class="flex gap-2 items-center mt-1">
+                        <div class="flex flex-wrap gap-2 items-center mt-1">
+                            <span class="text-[9px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300">Cód: ${p.codigo || 'S/C'}</span>
+
                             <p class="text-[10px] text-slate-400 font-black uppercase tracking-tight">${p.quantidade} un x R$ ${p.valor}</p>
                             <span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100">${p.local || 'Geral'}</span>
+                            ${nimbiHtml}
                         </div>
                     </div>
                     <div class="flex items-center gap-6">

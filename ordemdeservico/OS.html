@@ -34,7 +34,8 @@
         .item-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; transition: all 0.2s; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px;}
         .item-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .item-card h2 { margin: 0 0 5px 0; font-size: 1.4rem; font-weight: 800; color: var(--text-main); }
-        .item-card p { margin: 0 0 10px 0; font-size: 0.8rem; color: var(--primary); font-weight: 600; }
+        .item-card p { margin: 0 0 5px 0; font-size: 0.85rem; color: var(--primary); font-weight: 600; }
+        .item-card small { margin: 0 0 10px 0; font-size: 0.75rem; color: var(--text-secondary); }
         
         /* BADGES E STATUS */
         .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
@@ -118,10 +119,14 @@
                     <p id="modalSolicitante" class="info-value"></p>
                 </div>
                 <div class="info-box">
+                    <span class="info-label">Setor</span>
+                    <p id="modalSetor" class="info-value"></p>
+                </div>
+                <div class="info-box">
                     <span class="info-label">Data Estipulada</span>
                     <p id="modalData" class="info-value"></p>
                 </div>
-                <div class="info-box" style="grid-column: span 2;">
+                <div class="info-box">
                     <span class="info-label">Tipo de Serviço</span>
                     <p id="modalTipo" class="info-value"></p>
                 </div>
@@ -146,7 +151,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        // Importado 'where' para permitir a busca nos filtros
         import { getFirestore, collection, getDocs, query, orderBy, limit, startAfter, doc, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -260,6 +264,7 @@
             finally { carregando = false; }
         }
 
+        // CARREGA A O.S. NA TELA PRINCIPAL (LISTAGEM)
         function criarCard(id, data) {
             const div = document.createElement('div');
             div.className = 'item-card';
@@ -272,6 +277,7 @@
             div.innerHTML = `
                 <h2>${data.codigoOS}</h2>
                 <p>${data.tipoServico || "Não informado"}</p>
+                <small>📍 ${data.setor || "Setor não informado"}</small>
                 <span class="status-badge ${badgeClass}" id="badge-${id}">${data.status}</span>
             `;
             document.getElementById('lista').appendChild(div);
@@ -286,6 +292,7 @@
             badge.className = 'status-badge ' + (data.status === 'Concluída' ? 'status-concluida' : 'status-pendente');
 
             document.getElementById('modalSolicitante').innerText = data.solicitante || "Não informado";
+            document.getElementById('modalSetor').innerText = data.setor || "Não informado";
             
             let dataFormatada = data.dataEstipulada;
             if(dataFormatada) {
@@ -357,6 +364,7 @@
             const titulo = document.getElementById('modalTitulo').innerText;
             const status = document.getElementById('modalStatusBadge').innerText;
             const solicitante = document.getElementById('modalSolicitante').innerText;
+            const setor = document.getElementById('modalSetor').innerText;
             const data = document.getElementById('modalData').innerText;
             const tipo = document.getElementById('modalTipo').innerText;
             const desc = document.getElementById('modalDescricao').innerText;
@@ -391,16 +399,20 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="width: 48%; margin-bottom: 15px;">
                         <span style="font-size: 12px; color: #64748b; font-weight: bold; text-transform: uppercase;">Solicitante</span>
                         <div style="font-size: 16px; font-weight: bold; margin-top: 3px;">${solicitante}</div>
                     </div>
-                    <div style="flex: 1;">
+                    <div style="width: 48%; margin-bottom: 15px;">
+                        <span style="font-size: 12px; color: #64748b; font-weight: bold; text-transform: uppercase;">Setor / Local</span>
+                        <div style="font-size: 16px; font-weight: bold; margin-top: 3px;">${setor}</div>
+                    </div>
+                    <div style="width: 48%;">
                         <span style="font-size: 12px; color: #64748b; font-weight: bold; text-transform: uppercase;">Data Estipulada</span>
                         <div style="font-size: 16px; font-weight: bold; margin-top: 3px;">${data}</div>
                     </div>
-                    <div style="flex: 1;">
+                    <div style="width: 48%;">
                         <span style="font-size: 12px; color: #64748b; font-weight: bold; text-transform: uppercase;">Tipo de Serviço</span>
                         <div style="font-size: 16px; font-weight: bold; margin-top: 3px;">${tipo}</div>
                     </div>

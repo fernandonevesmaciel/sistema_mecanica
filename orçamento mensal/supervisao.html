@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Supervisão Abatedouro - Dashboard Consolidado de Orçamentos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+        body {
+            padding-top: 85px;
+            background: #f1f5f9;
+        }
+        .positivo { color: #10b981 !important; }
+        .negativo { color: #ef4444 !important; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar shadow-sm">
+        <div class="flex items-center gap-2 font-black text-blue-600 text-xl tracking-tight">
+            <span>🏭</span> SUPERVISÃO ABATEDOURO — CONSOLIDADO
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors">Voltar ao Início</a>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 pb-12">
+        
+        <!-- PAINEL DE CONTROLE E SELEÇÃO MENSAL -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Dashboard Consolidado (Elétrica & Mecânica)</h1>
+                <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Gestão de Metas e Gastos por Categoria (Elétrica, Civil, Ferramentas, Hidráulica, Mecânica)</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex gap-2 bg-slate-100 p-2 rounded-xl border">
+                    <select id="selectMes" onchange="carregarDadosConsolidados()" class="bg-transparent font-bold text-slate-700 outline-none text-sm">
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                    <select id="selectAno" onchange="carregarDadosConsolidados(); carregarResumoAnualTela();" class="bg-transparent font-bold text-slate-700 outline-none text-sm">
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAINEL DE EXPORTAÇÃO DE PDF AVANÇADO -->
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-md mb-6 border border-slate-700 text-white">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-yellow-400">📄</span>
+                <h2 class="text-sm font-black uppercase tracking-widest text-slate-100">Painel de Exportação de Relatórios PDF</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Data Início</label>
+                    <input type="date" id="dataInicioPdf" class="w-full bg-slate-700 text-white text-sm font-bold p-2 rounded-xl outline-none border border-slate-600">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Data Fim</label>
+                    <input type="date" id="dataFimPdf" class="w-full bg-slate-700 text-white text-sm font-bold p-2 rounded-xl outline-none border border-slate-600">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Setor / Categoria</label>
+                    <select id="filtroSetorPdf" class="w-full bg-slate-700 text-white text-sm font-bold p-2.5 rounded-xl outline-none border border-slate-600">
+                        <option value="TODOS">Todos os Setores</option>
+                        <option value="Eletrica">Elétrica</option>
+                        <option value="Civil">Civil</option>
+                        <option value="Ferramentas">Ferramentas</option>
+                        <option value="Hidraulica">Hidráulica</option>
+                        <option value="Mecanica">Mecânica</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button onclick="exportarPdfPorPeriodoESetor()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all uppercase tracking-widest">
+                        PDF Período / Setor
+                    </button>
+                    <button onclick="exportarPdfAnualConsolidado()" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all uppercase tracking-widest">
+                        PDF Resumo Anual Geral
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARDS GERAIS DO MÊS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Meta Orçamentária Total (Mês)</p>
+                <p id="cardMetaTotal" class="text-2xl font-black text-slate-800 tracking-tighter">R$ 0,00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Gasto Real Consolidado (Mês)</p>
+                <p id="cardGastoTotal" class="text-2xl font-black text-slate-800 tracking-tighter">R$ 0,00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Saldo Total Disponível (Mês)</p>
+                <p id="cardSaldoTotal" class="text-2xl font-black tracking-tighter">R$ 0,00</p>
+            </div>
+        </div>
+
+        <!-- SEÇÃO DE ORÇAMENTOS POR CATEGORIA (GRID DE CARDS) -->
+        <div class="mb-8">
+            <h2 class="text-sm font-black uppercase tracking-widest text-slate-600 mb-4">Orçamento Separado por Categoria (Mês Atual)</h2>
+            <div id="gridCategorias" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Preenchido dinamicamente via JS -->
+            </div>
+        </div>
+
+        <!-- NOVA SEÇÃO: VISUALIZAÇÃO ANUAL NA TELA -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+            <div class="bg-slate-800 p-4 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex justify-between items-center">
+                <span>Resumo Anual Consolidado (Todos os Setores)</span>
+                <span id="anoResumoTexto" class="bg-slate-700 px-3 py-1 rounded-lg">---</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 border-b border-slate-100">
+                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Meta Anual Total</p>
+                    <p id="resumoMetaAnual" class="text-lg font-black text-slate-800">R$ 0,00</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Gasto Anual Total</p>
+                    <p id="resumoGastoAnual" class="text-lg font-black text-slate-800">R$ 0,00</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Diferença Anual (Saldo)</p>
+                    <p id="resumoSaldoAnual" class="text-lg font-black">R$ 0,00</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider border-b border-slate-200">
+                            <th class="p-4">Mês</th>
+                            <th class="p-4 text-right">Meta Total</th>
+                            <th class="p-4 text-right">Gasto Total</th>
+                            <th class="p-4 text-right">Diferença (Saldo)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaResumoAnualCorpo" class="divide-y divide-slate-100 text-sm">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- LISTA CONSOLIDADA DE ITENS DO MÊS -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+            <div class="bg-slate-800 p-4 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex justify-between items-center">
+                <span>Itens Comprados no Mês (Elétrica & Mecânica)</span>
+                <span id="periodoTexto" class="bg-slate-700 px-3 py-1 rounded-lg">---</span>
+            </div>
+            <div class="p-4 border-b border-slate-100 flex gap-4 items-center bg-slate-50">
+                <span class="text-xs font-bold text-slate-500 uppercase">Filtrar por Categoria:</span>
+                <select id="filtroCategoriaTabela" onchange="renderizarTabelaItens()" class="bg-white text-slate-700 text-xs font-bold p-2 rounded-xl border border-slate-200 outline-none">
+                    <option value="TODAS">Todas as Categorias</option>
+                    <option value="Eletrica">Elétrica</option>
+                    <option value="Civil">Civil</option>
+                    <option value="Ferramentas">Ferramentas</option>
+                    <option value="Hidraulica">Hidráulica</option>
+                    <option value="Mecanica">Mecânica</option>
+                </select>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider border-b border-slate-200">
+                            <th class="p-4">Origem / Banco</th>
+                            <th class="p-4">Categoria</th>
+                            <th class="p-4">Descrição do Item</th>
+                            <th class="p-4 text-center">Qtd</th>
+                            <th class="p-4 text-right">Unitário</th>
+                            <th class="p-4 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaItensCorpo" class="divide-y divide-slate-100 text-sm">
+                        <!-- Inserido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const configMecanica = {
+            apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
+            authDomain: "mecanica-699bb.firebaseapp.com",
+            projectId: "mecanica-699bb",
+            storageBucket: "mecanica-699bb.firebasestorage.app",
+            messagingSenderId: "223675812288",
+            appId: "1:223675812288:web:f91f3dab6705fa7a2aa025"
+        };
+
+        const configEletrica = {
+            apiKey: "AIzaSyB_w4-z_onAEUf10ROfYCmvnm6Fkkp2sYo",
+            authDomain: "eletrica-8c96e.firebaseapp.com",
+            projectId: "eletrica-8c96e",
+            storageBucket: "eletrica-8c96e.firebasestorage.app",
+            messagingSenderId: "456815528430",
+            appId: "1:456815528430:web:4cf873dc8071c9a2bbe6ff"
+        };
+
+        const appMec = initializeApp(configMecanica, "appMecanica");
+        const appElec = initializeApp(configEletrica, "appEletrica");
+
+        const dbMec = getFirestore(appMec);
+        const dbElec = getFirestore(appElec);
+
+        const CATEGORIAS = ["Eletrica", "Civil", "Ferramentas", "Hidraulica", "Mecanica"];
+
+        const MAPA_CODIGOS = {
+            "373": "Eletrica",
+            "36/373": "Eletrica",
+            "42": "Mecanica",
+            "36/42": "Mecanica",
+            "43": "Civil",
+            "36/43": "Civil",
+            "309": "Ferramentas"
+        };
+
+        let itensConsolidadosGlobais = [];
+        let metasCategoriasGlobais = {};
+
+        function formatarMoedaBR(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        async function init() {
+            const d = new Date();
+            const mesAtualStr = String(d.getMonth() + 1).padStart(2, '0');
+            const anoAtualStr = String(d.getFullYear());
+
+            document.getElementById('selectMes').value = mesAtualStr;
+            document.getElementById('selectAno').value = anoAtualStr;
+
+            document.getElementById('dataInicioPdf').value = `${anoAtualStr}-${mesAtualStr}-01`;
+            document.getElementById('dataFimPdf').value = d.toISOString().split('T')[0];
+
+            carregarDadosConsolidados();
+            carregarResumoAnualTela();
+        }
+
+        window.carregarDadosConsolidados = async () => {
+            const mes = document.getElementById('selectMes').value;
+            const ano = document.getElementById('selectAno').value;
+            const periodoId = `${mes}-${ano}`;
+            const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
+            document.getElementById('periodoTexto').innerText = `${mesNome} / ${ano}`;
+
+            itensConsolidadosGlobais = [];
+            metasCategoriasGlobais = { Eletrica: 0, Civil: 0, Ferramentas: 0, Hidraulica: 0, Mecanica: 0 };
+
+            try {
+                const docMecRef = doc(dbMec, "listas_mensais", periodoId);
+                const snapMec = await getDoc(docMecRef);
+                if (snapMec.exists()) {
+                    const dados = snapMec.data();
+                    if (dados.metasPorCategoria) {
+                        for (let cat in dados.metasPorCategoria) {
+                            metasCategoriasGlobais[cat] = (metasCategoriasGlobais[cat] || 0) + (Number(dados.metasPorCategoria[cat]) || 0);
+                        }
+                    } else if (dados.meta) {
+                        metasCategoriasGlobais["Mecanica"] += Number(dados.meta) || 0;
+                    }
+
+                    (dados.itens || []).forEach(item => {
+                        let cat = item.categoria || classificarCategoriaPorItem(item, "Mecânica");
+                        itensConsolidadosGlobais.push({ ...item, origem: "Mecânica", categoria: cat });
+                    });
+                }
+
+                const docElecRef = doc(dbElec, "listas_mensais", periodoId);
+                const snapElec = await getDoc(docElecRef);
+                if (snapElec.exists()) {
+                    const dados = snapElec.data();
+                    if (dados.metasPorCategoria) {
+                        for (let cat in dados.metasPorCategoria) {
+                            metasCategoriasGlobais[cat] = (metasCategoriasGlobais[cat] || 0) + (Number(dados.metasPorCategoria[cat]) || 0);
+                        }
+                    } else if (dados.meta) {
+                        metasCategoriasGlobais["Eletrica"] += Number(dados.meta) || 0;
+                    }
+
+                    (dados.itens || []).forEach(item => {
+                        let cat = item.categoria || classificarCategoriaPorItem(item, "Elétrica");
+                        itensConsolidadosGlobais.push({ ...item, origem: "Elétrica", categoria: cat });
+                    });
+                }
+
+            } catch (error) {
+                console.error("Erro ao buscar dados dos Firestore:", error);
+            }
+
+            renderizarDashboardConsolidado();
+        }
+
+        function classificarCategoriaPorItem(item, origemPadrao) {
+            let cod = String(item.codMov || item.codigoMovimentacao || "").trim();
+            if (MAPA_CODIGOS[cod]) return MAPA_CODIGOS[cod];
+
+            let nome = String(item.nome || "").toLowerCase();
+            if (nome.includes("elétr") || nome.includes("cabo") || origemPadrao === "Elétrica") return "Eletrica";
+            if (nome.includes("civil") || nome.includes("cimento") || nome.includes("piso")) return "Civil";
+            if (nome.includes("ferramenta") || nome.includes("chave") || nome.includes("furadeira")) return "Ferramentas";
+            if (nome.includes("hidrául") || nome.includes("tubo") || nome.includes("conexão")) return "Hidraulica";
+            
+            return origemPadrao === "Elétrica" ? "Eletrica" : "Mecanica";
+        }
+
+        function renderizarDashboardConsolidado() {
+            let gastosPorCategoria = { Eletrica: 0, Civil: 0, Ferramentas: 0, Hidraulica: 0, Mecanica: 0 };
+            let gastoTotalGeral = 0;
+            let metaTotalGeral = 0;
+
+            for (let cat in metasCategoriasGlobais) {
+                metaTotalGeral += Number(metasCategoriasGlobais[cat]) || 0;
+            }
+
+            itensConsolidadosGlobais.forEach(it => {
+                let sub = (Number(it.valor) || 0) * (Number(it.quantidade) || 1);
+                gastoTotalGeral += sub;
+                let cat = it.categoria || "Mecanica";
+                if (gastosPorCategoria[cat] !== undefined) {
+                    gastosPorCategoria[cat] += sub;
+                } else {
+                    gastosPorCategoria["Mecanica"] += sub;
+                }
+            });
+
+            document.getElementById('cardMetaTotal').innerText = formatarMoedaBR(metaTotalGeral);
+            document.getElementById('cardGastoTotal').innerText = formatarMoedaBR(gastoTotalGeral);
+            
+            let saldoTotal = metaTotalGeral - gastoTotalGeral;
+            let saldoUI = document.getElementById('cardSaldoTotal');
+            saldoUI.innerText = formatarMoedaBR(saldoTotal);
+            saldoUI.className = "text-2xl font-black " + (saldoTotal >= 0 ? "positivo" : "negativo");
+
+            const gridCatUI = document.getElementById('gridCategorias');
+            gridCatUI.innerHTML = CATEGORIAS.map(cat => {
+                let metaCat = Number(metasCategoriasGlobais[cat]) || 0;
+                let gastoCat = Number(gastosPorCategoria[cat]) || 0;
+                let saldoCat = metaCat - gastoCat;
+                let percentual = metaCat > 0 ? Math.min((gastoCat / metaCat) * 100, 100).toFixed(0) : 0;
+                let corBarra = saldoCat >= 0 ? "bg-blue-600" : "bg-red-500";
+
+                return `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider">${cat}</h3>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">${percentual}% usado</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 mb-4">
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase">Meta</p>
+                                    <p class="text-sm font-black text-slate-700">${formatarMoedaBR(metaCat)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase">Gasto</p>
+                                    <p class="text-sm font-black text-slate-700">${formatarMoedaBR(gastoCat)}</p>
+                                </div>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-3">
+                                <div class="${corBarra} h-full rounded-full transition-all duration-500" style="width: ${percentual}%"></div>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">Saldo</span>
+                            <span class="text-sm font-black ${saldoCat >= 0 ? 'positivo' : 'negativo'}">${formatarMoedaBR(saldoCat)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            renderizarTabelaItens();
+            carregarResumoAnualTela();
+        }
+
+        window.renderizarTabelaItens = () => {
+            const filtroCat = document.getElementById('filtroCategoriaTabela').value;
+            const corpoTabela = document.getElementById('tabelaItensCorpo');
+
+            let itensFiltrados = itensConsolidadosGlobais;
+            if (filtroCat !== "TODAS") {
+                itensFiltrados = itensConsolidadosGlobais.filter(i => i.categoria === filtroCat);
+            }
+
+            if (itensFiltrados.length === 0) {
+                corpoTabela.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold text-xs uppercase">Nenhum item encontrado</td></tr>`;
+                return;
+            }
+
+            corpoTabela.innerHTML = itensFiltrados.map(p => {
+                let sub = (Number(p.valor) || 0) * (Number(p.quantidade) || 1);
+                let corOrigem = p.origem === "Elétrica" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800";
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                        <td class="p-4"><span class="text-[10px] font-extrabold px-2 py-1 rounded-lg ${corOrigem}">${p.origem}</span></td>
+                        <td class="p-4 font-bold text-xs text-slate-600">${p.categoria}</td>
+                        <td class="p-4 font-bold text-slate-800">${p.nome}</td>
+                        <td class="p-4 text-center font-semibold text-slate-600">${p.quantidade || 1}</td>
+                        <td class="p-4 text-right font-semibold text-slate-600">${formatarMoedaBR(p.valor || 0)}</td>
+                        <td class="p-4 text-right font-black text-slate-800">${formatarMoedaBR(sub)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // CARREGAR TABELA E VALORES DO RESUMO ANUAL NA TELA
+        window.carregarResumoAnualTela = async () => {
+            const ano = document.getElementById('selectAno').value;
+            document.getElementById('anoResumoTexto').innerText = `Ano: ${ano}`;
+
+            let metaAnualTotal = 0;
+            let gastoAnualTotal = 0;
+            const resumoMeses = [];
+
+            const nomesMeses = {
+                "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
+                "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
+                "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
+            };
+
+            for (let i = 1; i <= 12; i++) {
+                const m = String(i).padStart(2, '0');
+                const periodoId = `${m}-${ano}`;
+                let metaMes = 0;
+                let gastoMes = 0;
+
+                try {
+                    const snapMec = await getDoc(doc(dbMec, "listas_mensais", periodoId));
+                    if (snapMec.exists()) {
+                        let dados = snapMec.data();
+                        if (dados.metasPorCategoria) {
+                            for (let c in dados.metasPorCategoria) metaMes += Number(dados.metasPorCategoria[c]) || 0;
+                        } else {
+                            metaMes += Number(dados.meta) || 0;
+                        }
+                        (dados.itens || []).forEach(it => {
+                            gastoMes += (Number(it.valor) || 0) * (Number(it.quantidade) || 1);
+                        });
+                    }
+
+                    const snapElec = await getDoc(doc(dbElec, "listas_mensais", periodoId));
+                    if (snapElec.exists()) {
+                        let dados = snapElec.data();
+                        if (dados.metasPorCategoria) {
+                            for (let c in dados.metasPorCategoria) metaMes += Number(dados.metasPorCategoria[c]) || 0;
+                        } else {
+                            metaMes += Number(dados.meta) || 0;
+                        }
+                        (dados.itens || []).forEach(it => {
+                            gastoMes += (Number(it.valor) || 0) * (Number(it.quantidade) || 1);
+                        });
+                    }
+                } catch (e) {
+                    console.error("Erro ao buscar mês para resumo anual na tela:", e);
+                }
+
+                metaAnualTotal += metaMes;
+                gastoAnualTotal += gastoMes;
+                let diferencaMes = metaMes - gastoMes;
+                resumoMeses.push({ mesNome: nomesMeses[m], meta: metaMes, gasto: gastoMes, diferenca: diferencaMes });
+            }
+
+            let diferencaAnualTotal = metaAnualTotal - gastoAnualTotal;
+
+            document.getElementById('resumoMetaAnual').innerText = formatarMoedaBR(metaAnualTotal);
+            document.getElementById('resumoGastoAnual').innerText = formatarMoedaBR(gastoAnualTotal);
+            
+            let saldoAnualUI = document.getElementById('resumoSaldoAnual');
+            saldoAnualUI.innerText = formatarMoedaBR(diferencaAnualTotal);
+            saldoAnualUI.className = "text-lg font-black " + (diferencaAnualTotal >= 0 ? "positivo" : "negativo");
+
+            const corpoTabelaAnual = document.getElementById('tabelaResumoAnualCorpo');
+            corpoTabelaAnual.innerHTML = resumoMeses.map(item => {
+                let corDif = item.diferenca >= 0 ? "positivo" : "negativo";
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                        <td class="p-4 font-bold text-slate-700">${item.mesNome}</td>
+                        <td class="p-4 text-right font-semibold text-slate-600">${formatarMoedaBR(item.meta)}</td>
+                        <td class="p-4 text-right font-semibold text-slate-600">${formatarMoedaBR(item.gasto)}</td>
+                        <td class="p-4 text-right font-black ${corDif}">${formatarMoedaBR(item.diferenca)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // EXPORTAR PDF POR PERÍODO (DATA INÍCIO/FIM) E SETOR
+        window.exportarPdfPorPeriodoESetor = async () => {
+            const dataI = document.getElementById('dataInicioPdf').value;
+            const dataF = document.getElementById('dataFimPdf').value;
+            const setorFiltro = document.getElementById('filtroSetorPdf').value;
+
+            if (!dataI || !dataF) return alert("Preencha as datas de início e fim para o relatório!");
+            if (dataI > dataF) return alert("A data de início não pode ser maior que a data fim!");
+
+            const d1 = new Date(dataI);
+            const d2 = new Date(dataF);
+
+            let anoAtual = d1.getFullYear();
+            let mesAtual = d1.getMonth() + 1;
+            const anoFim = d2.getFullYear();
+            const mesFim = d2.getMonth() + 1;
+
+            let itensFiltradosPeriodo = [];
+            let metaTotalPeriodo = 0;
+            let gastoTotalPeriodo = 0;
+
+            while (anoAtual < anoFim || (anoAtual === anoFim && mesAtual <= mesFim)) {
+                const mesFormat = String(mesAtual).padStart(2, '0');
+                const periodoId = `${mesFormat}-${anoAtual}`;
+
+                try {
+                    const snapMec = await getDoc(doc(dbMec, "listas_mensais", periodoId));
+                    if (snapMec.exists()) {
+                        let dados = snapMec.data();
+                        if (dados.metasPorCategoria) {
+                            for (let c in dados.metasPorCategoria) {
+                                if (setorFiltro === "TODOS" || setorFiltro === c) {
+                                    metaTotalPeriodo += Number(dados.metasPorCategoria[c]) || 0;
+                                }
+                            }
+                        } else if (setorFiltro === "TODOS" || setorFiltro === "Mecanica") {
+                            metaTotalPeriodo += Number(dados.meta) || 0;
+                        }
+
+                        (dados.itens || []).forEach(it => {
+                            let cat = it.categoria || classificarCategoriaPorItem(it, "Mecânica");
+                            if (setorFiltro === "TODOS" || cat === setorFiltro) {
+                                itensFiltradosPeriodo.push({ ...it, origem: "Mecânica", categoria: cat });
+                            }
+                        });
+                    }
+
+                    const snapElec = await getDoc(doc(dbElec, "listas_mensais", periodoId));
+                    if (snapElec.exists()) {
+                        let dados = snapElec.data();
+                        if (dados.metasPorCategoria) {
+                            for (let c in dados.metasPorCategoria) {
+                                if (setorFiltro === "TODOS" || setorFiltro === c) {
+                                    metaTotalPeriodo += Number(dados.metasPorCategoria[c]) || 0;
+                                }
+                            }
+                        } else if (setorFiltro === "TODOS" || setorFiltro === "Eletrica") {
+                            metaTotalPeriodo += Number(dados.meta) || 0;
+                        }
+
+                        (dados.itens || []).forEach(it => {
+                            let cat = it.categoria || classificarCategoriaPorItem(it, "Elétrica");
+                            if (setorFiltro === "TODOS" || cat === setorFiltro) {
+                                itensFiltradosPeriodo.push({ ...it, origem: "Elétrica", categoria: cat });
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error("Erro ao buscar dados para PDF por período:", e);
+                }
+
+                mesAtual++;
+                if (mesAtual > 12) {
+                    mesAtual = 1;
+                    anoAtual++;
+                }
+            }
+
+            if (itensFiltradosPeriodo.length === 0) return alert("Nenhum item encontrado para os filtros de período e setor selecionados!");
+
+            itensFiltradosPeriodo.forEach(it => {
+                gastoTotalPeriodo += (Number(it.valor) || 0) * (Number(it.quantidade) || 1);
+            });
+
+            let saldoPeriodo = metaTotalPeriodo - gastoTotalPeriodo;
+
+            const { jsPDF } = window.jspdf;
+            const docPdf = new jsPDF('p', 'mm', 'a4');
+
+            docPdf.setFillColor(30, 41, 59);
+            docPdf.rect(0, 0, 210, 28, 'F');
+            docPdf.setTextColor(255, 255, 255);
+            docPdf.setFontSize(14);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.text("SUPERVISÃO ABATEDOURO — RELATÓRIO CONSOLIDADO", 14, 18);
+
+            docPdf.setTextColor(50, 50, 50);
+            docPdf.setFontSize(10);
+            docPdf.text(`Setor Filtrado: ${setorFiltro === "TODOS" ? "Todos os Setores" : setorFiltro}`, 14, 36);
+            docPdf.text(`Período: ${dataI.split('-').reverse().join('/')} até ${dataF.split('-').reverse().join('/')}`, 14, 42);
+
+            docPdf.setDrawColor(200, 200, 200);
+            docPdf.setFillColor(248, 250, 252);
+            docPdf.roundedRect(14, 48, 182, 22, 3, 3, 'FD');
+
+            docPdf.setFontSize(8);
+            docPdf.setTextColor(100, 100, 100);
+            docPdf.text("META TOTAL", 20, 55);
+            docPdf.text("GASTO TOTAL", 85, 55);
+            docPdf.text("DIFERENÇA (SALDO)", 145, 55);
+
+            docPdf.setFontSize(11);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.setTextColor(30, 30, 30);
+            docPdf.text(formatarMoedaBR(metaTotalPeriodo), 20, 64);
+            docPdf.text(formatarMoedaBR(gastoTotalPeriodo), 85, 64);
+            
+            docPdf.setTextColor(saldoPeriodo >= 0 ? 16 : 239, saldoPeriodo >= 0 ? 185 : 68, saldoPeriodo >= 0 ? 129 : 68);
+            docPdf.text(formatarMoedaBR(saldoPeriodo), 145, 64);
+
+            let corpoTabela = itensFiltradosPeriodo.map(p => {
+                let sub = (Number(p.valor) || 0) * (Number(p.quantidade) || 1);
+                return [
+                    p.origem, 
+                    p.categoria, 
+                    p.nome, 
+                    p.quantidade || 1, 
+                    formatarMoedaBR(p.valor || 0), 
+                    formatarMoedaBR(sub)
+                ];
+            });
+
+            docPdf.autoTable({
+                startY: 76,
+                head: [['Banco', 'Setor', 'Descrição do Item', 'Qtd', 'Unitário', 'Total']],
+                body: corpoTabela,
+                theme: 'striped',
+                headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 8, cellPadding: 3 },
+                columnStyles: {
+                    3: { halign: 'center' },
+                    4: { halign: 'right' },
+                    5: { halign: 'right' }
+                }
+            });
+
+            const pageCount = docPdf.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                docPdf.setPage(i);
+                docPdf.setFontSize(8);
+                docPdf.setTextColor(150, 150, 150);
+                docPdf.text(`Emitido pelo Sistema de Supervisão do Abatedouro — Página ${i} de ${pageCount}`, 14, 290);
+            }
+
+            docPdf.save(`Relatorio_Supervisao_${dataI}_a_${dataF}.pdf`);
+        }
+
+        // EXPORTAR PDF ANUAL GERAL
+        window.exportarPdfAnualConsolidado = async () => {
+            const ano = document.getElementById('selectAno').value;
+            let metaAnualTotal = 0;
+            let gastoAnualTotal = 0;
+            const resumoMeses = [];
+
+            const nomesMeses = {
+                "01": "Janeiro", "02": "Fevereiro", "03": "Março", "04": "Abril",
+                "05": "Maio", "06": "Junho", "07": "Julho", "08": "Agosto",
+                "09": "Setembro", "10": "Outubro", "11": "Novembro", "12": "Dezembro"
+            };
+
+            for (let i = 1; i <= 12; i++) {
+                const m = String(i).padStart(2, '0');
+                const periodoId = `${m}-${ano}`;
+                let metaMes = 0;
+                let gastoMes = 0;
+
+                try {
+                    const snapMec = await getDoc(doc(dbMec, "listas_mensais", periodoId));
+                    if (snapMec.exists()) {
+                        let dados = snapMec.data();
+                        if (dados.metasPorCategoria) {
+                            for (let c in dados.metasPorCategoria) metaMes += Number(dados.metasPorCategoria[c]) || 0;
+                        } else {
+                            metaMes += Number(dados.meta) || 0;
+                        }
+                        (dados.itens || []).forEach(it => {
+                            gastoMes += (Number(it.valor) || 0) * (Number(it.quantidade) || 1);
+                        });
+                    }
+
+                    const snapElec = await getDoc(doc(dbElec, "listas_mensais", periodoId));
+                    if (snapElec.exists()) {
+                        let dados = snapElec.data();
+                        if (dados.metasPorCategoria) {
+                            for (let c in dados.metasPorCategoria) metaMes += Number(dados.metasPorCategoria[c]) || 0;
+                        } else {
+                            metaMes += Number(dados.meta) || 0;
+                        }
+                        (dados.itens || []).forEach(it => {
+                            gastoMes += (Number(it.valor) || 0) * (Number(it.quantidade) || 1);
+                        });
+                    }
+                } catch (e) {
+                    console.error("Erro ao buscar mês para relatório anual:", e);
+                }
+
+                metaAnualTotal += metaMes;
+                gastoAnualTotal += gastoMes;
+                let diferencaMes = metaMes - gastoMes;
+                resumoMeses.push({ mesNum: m, mesNome: nomesMeses[m], meta: metaMes, gasto: gastoMes, diferenca: diferencaMes });
+            }
+
+            let diferencaAnualTotal = metaAnualTotal - gastoAnualTotal;
+
+            const { jsPDF } = window.jspdf;
+            const docPdf = new jsPDF('p', 'mm', 'a4');
+
+            docPdf.setFillColor(30, 41, 59);
+            docPdf.rect(0, 0, 210, 28, 'F');
+            docPdf.setTextColor(255, 255, 255);
+            docPdf.setFontSize(14);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.text(`RESUMO ANUAL GERAL (${ano}) — SUPERVISÃO ABATEDOURO`, 14, 18);
+
+            docPdf.setDrawColor(200, 200, 200);
+            docPdf.setFillColor(248, 250, 252);
+            docPdf.roundedRect(14, 36, 182, 22, 3, 3, 'FD');
+
+            docPdf.setFontSize(8);
+            docPdf.setTextColor(100, 100, 100);
+            docPdf.text("META ANUAL TOTAL", 20, 43);
+            docPdf.text("GASTO ANUAL TOTAL", 85, 43);
+            docPdf.text("DIFERENÇA ANUAL (SALDO)", 140, 43);
+
+            docPdf.setFontSize(11);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.setTextColor(30, 30, 30);
+            docPdf.text(formatarMoedaBR(metaAnualTotal), 20, 52);
+            docPdf.text(formatarMoedaBR(gastoAnualTotal), 85, 52);
+            
+            docPdf.setTextColor(diferencaAnualTotal >= 0 ? 16 : 239, diferencaAnualTotal >= 0 ? 185 : 68, diferencaAnualTotal >= 0 ? 129 : 68);
+            docPdf.text(formatarMoedaBR(diferencaAnualTotal), 140, 52);
+
+            const corpoTabelaAnual = resumoMeses.map(item => {
+                return [
+                    item.mesNome,
+                    formatarMoedaBR(item.meta),
+                    formatarMoedaBR(item.gasto),
+                    formatarMoedaBR(item.diferenca)
+                ];
+            });
+
+            docPdf.autoTable({
+                startY: 64,
+                head: [['Mês do Ano', 'Meta Total do Mês', 'Gasto Total do Mês', 'Diferença (Saldo)']],
+                body: corpoTabelaAnual,
+                theme: 'grid',
+                headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
+                styles: { fontSize: 9, cellPadding: 4, halign: 'center' },
+                columnStyles: {
+                    0: { halign: 'left', fontStyle: 'bold' },
+                    1: { halign: 'right' },
+                    2: { halign: 'right' },
+                    3: { halign: 'right' }
+                }
+            });
+
+            const pageCount = docPdf.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                docPdf.setPage(i);
+                docPdf.setFontSize(8);
+                docPdf.setTextColor(150, 150, 150);
+                docPdf.text(`Emitido pelo Sistema de Supervisão do Abatedouro — Página ${i} de ${pageCount}`, 14, 290);
+            }
+
+            docPdf.save(`Resumo_Anual_Geral_${ano}.pdf`);
+        }
+
+        init();
+    </script>
+</body>
+</html>

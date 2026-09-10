@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Mecânica App - Serviços Terceirizados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root { --primary: #f97316; --border: #e2e8f0; }
+        .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; box-sizing: border-box; z-index: 1000; }
+        body { padding-top: 85px; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen px-4 pb-12">
+    <nav class="navbar shadow-sm">
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>⚙️</span> MECÂNICA APP</div>
+        <a href="../principal.html" class="text-slate-500 hover:text-orange-500 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
+    </nav>
+
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
+            <div>
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-orange-500 uppercase">Serviços Terceirizados</h1>
+                <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Registro e Controle de Lançamentos</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Formulário de Lançamento -->
+            <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+                <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Novo Serviço</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Empresa Terceirizada</label>
+                        <input type="text" id="inputEmpresa" placeholder="Nome da Empresa..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 transition-all text-sm font-semibold text-slate-700">
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Descrição do Serviço</label>
+                        <textarea id="inputDescricao" rows="2" placeholder="O que será realizado?" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 transition-all text-sm font-semibold text-slate-700 custom-scroll"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Data da Realização</label>
+                            <input type="date" id="inputData" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 transition-all text-sm font-semibold text-slate-700">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Valor Cobrado</label>
+                            <input type="text" id="inputValor" oninput="mascaraMoeda(this)" placeholder="R$ 0,00" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 transition-all text-sm font-semibold text-slate-700 text-right">
+                        </div>
+                    </div>
+
+                    <button onclick="adicionarServico()" class="w-full py-3 mt-2 rounded-xl text-xs font-black uppercase shadow-md bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100 transition-colors">＋ Registrar Serviço</button>
+                </div>
+            </div>
+
+            <!-- Lista de Serviços -->
+            <div class="lg:col-span-7 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-fit">
+                <div class="bg-slate-800 p-4 flex justify-between items-center shrink-0">
+                    <h2 class="text-white font-bold text-xs uppercase tracking-widest">Histórico de Serviços</h2>
+                    <button onclick="exportarPDF()" id="btnGerarPDF" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm transition-colors">GERAR PDF</button>
+                </div>
+                
+                <div class="p-4 bg-slate-50 border-b flex justify-between items-center shrink-0">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total em Serviços</span>
+                        <span id="totalServicos" class="text-2xl font-black text-slate-800 tracking-tighter">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <ul id="listaServicosUI" class="divide-y divide-slate-100 overflow-y-auto max-h-[500px] custom-scroll min-h-[300px]">
+                    <!-- Renderizado via JS -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfigMecanica = {
+            apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
+            authDomain: "mecanica-699bb.firebaseapp.com",
+            projectId: "mecanica-699bb",
+            messagingSenderId: "223675812288",
+            appId: "1:223675812288:web:f91f3dab6705fa7a2aa025",
+            measurementId: "G-G78PR55F9F"
+        };
+
+        const app = initializeApp(firebaseConfigMecanica);
+        const db = getFirestore(app);
+
+        let servicosCadastrados = [];
+        let valorTotalServicos = 0;
+
+        window.mascaraMoeda = (campo) => {
+            let v = campo.value.replace(/\D/g, "");
+            v = (v / 100).toFixed(2) + "";
+            v = v.replace(".", ",");
+            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            campo.value = "R$ " + v;
+        };
+
+        function init() {
+            const q = query(collection(db, "servicos_terceirizados"), orderBy("dataCriacao", "desc"));
+            onSnapshot(q, (snapshot) => {
+                servicosCadastrados = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderizarLista();
+            });
+        }
+
+        window.adicionarServico = async () => {
+            const empresa = document.getElementById('inputEmpresa').value.trim();
+            const descricao = document.getElementById('inputDescricao').value.trim();
+            const dataAgendada = document.getElementById('inputData').value;
+            const valorInput = document.getElementById('inputValor').value;
+
+            if (!empresa || !descricao || !dataAgendada || !valorInput) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            const valorFormatado = parseFloat(valorInput.replace(/[R$\s.]/g, "").replace(",", "."));
+
+            const btn = document.querySelector('button[onclick="adicionarServico()"]');
+            btn.innerText = "SALVANDO...";
+            btn.disabled = true;
+
+            try {
+                await addDoc(collection(db, "servicos_terceirizados"), {
+                    empresa: empresa,
+                    descricao: descricao,
+                    dataRealizacao: dataAgendada,
+                    valor: valorFormatado,
+                    dataCriacao: new Date().toISOString()
+                });
+
+                document.getElementById('inputEmpresa').value = "";
+                document.getElementById('inputDescricao').value = "";
+                document.getElementById('inputData').value = "";
+                document.getElementById('inputValor').value = "";
+            } catch (error) {
+                console.error("Erro ao salvar serviço:", error);
+                alert("Erro ao salvar o serviço.");
+            } finally {
+                btn.innerText = "＋ Registrar Serviço";
+                btn.disabled = false;
+            }
+        };
+
+        window.removerServico = async (id) => {
+            if(confirm("Deseja realmente remover este serviço?")) {
+                await deleteDoc(doc(db, "servicos_terceirizados", id));
+            }
+        };
+
+        function formatarDataBR(dataISO) {
+            if (!dataISO) return "";
+            const [ano, mes, dia] = dataISO.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function renderizarLista() {
+            const ui = document.getElementById('listaServicosUI');
+            valorTotalServicos = 0;
+
+            if (servicosCadastrados.length === 0) {
+                ui.innerHTML = `<div class="py-24 text-center text-slate-300 font-bold text-[10px] uppercase tracking-widest">Nenhum Serviço Registrado</div>`;
+                document.getElementById('totalServicos').innerText = "R$ 0,00";
+                return;
+            }
+
+            ui.innerHTML = servicosCadastrados.map(s => {
+                valorTotalServicos += (s.valor || 0);
+                
+                return `
+                <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors border-b border-slate-50">
+                    <div class="flex-1 pr-4">
+                        <p class="text-sm font-bold text-slate-700 leading-tight">${s.empresa}</p>
+                        <p class="text-[11px] font-semibold text-slate-500 mt-1">${s.descricao}</p>
+                        <div class="flex flex-wrap gap-2 items-center mt-2">
+                            <span class="text-[9px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300">Data: ${formatarDataBR(s.dataRealizacao)}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2 shrink-0">
+                        <span class="text-sm font-black text-slate-800 tracking-tighter">R$ ${(s.valor || 0).toFixed(2).replace('.', ',')}</span>
+                        <button onclick="removerServico('${s.id}')" class="px-2 py-1 bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-md font-bold text-[10px] uppercase transition-colors">Excluir</button>
+                    </div>
+                </li>`;
+            }).join('');
+
+            document.getElementById('totalServicos').innerText = `R$ ${valorTotalServicos.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`;
+        }
+
+        window.exportarPDF = () => {
+            if (servicosCadastrados.length === 0) return alert("Não há serviços para gerar o relatório.");
+
+            const btn = document.getElementById('btnGerarPDF');
+            const textoOriginal = btn.innerText;
+            btn.innerText = "GERANDO...";
+
+            const { jsPDF } = window.jspdf;
+            const docPdf = new jsPDF();
+
+            docPdf.setFontSize(14);
+            docPdf.setTextColor(249, 115, 22);
+            docPdf.text(`Relatório de Serviços Terceirizados`, 14, 15);
+            docPdf.setTextColor(0, 0, 0);
+
+            const colunas = ["Data", "Empresa", "Descrição", "Valor"];
+            
+            const linhas = servicosCadastrados.map(s => [
+                formatarDataBR(s.dataRealizacao),
+                s.empresa,
+                s.descricao,
+                `R$ ${(s.valor || 0).toFixed(2).replace('.', ',')}`
+            ]);
+
+            docPdf.autoTable({
+                head: [colunas],
+                body: linhas,
+                startY: 25,
+                theme: 'striped',
+                headStyles: { fillColor: [249, 115, 22] },
+                styles: { fontSize: 9 },
+                margin: { bottom: 15 }
+            });
+
+            let currentY = docPdf.lastAutoTable.finalY + 10;
+
+            docPdf.setFillColor(241, 245, 249);
+            docPdf.rect(14, currentY - 5, 180, 20, 'F');
+            docPdf.setFontSize(11);
+            docPdf.setFont(undefined, 'bold');
+            docPdf.text(`Total em Serviços: R$ ${valorTotalServicos.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`, 18, currentY + 3);
+
+            const dataAtual = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            docPdf.save(`Servicos_Terceirizados_${dataAtual}.pdf`);
+            
+            btn.innerText = textoOriginal;
+        };
+
+        init();
+    </script>
+</body>
+</html>

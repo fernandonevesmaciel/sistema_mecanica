@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚙️ Compras Realizadas - MECÂNICA App</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Bibliotecas para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); }
@@ -30,22 +35,46 @@
 </head>
 <body class="pt-24 pb-12 px-4">
 
-    <nav class="navbar">
+    <nav class="navbar shadow-sm">
         <div class="flex items-center gap-2" style="font-weight: 800; color: #2563eb; font-size: 1.25rem;">⚙️ MECÂNICA APP</div>
         <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-bold text-sm tracking-tight uppercase">Voltar ao Início</a>
     </nav>
 
-    <div class="max-w-5xl mx-auto">
-        <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div class="max-w-6xl mx-auto">
+        <div class="mb-8 flex flex-col justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">📦 Histórico de Compras Realizadas</h1>
                 <p class="text-slate-400 text-sm font-medium">Gerenciamento de status e observações em tempo real.</p>
             </div>
 
-            <div class="flex flex-wrap gap-2">
-                <input type="text" id="inputBusca" placeholder="Buscar nome, código ou nimbi..." class="filter-control w-full md:w-64">
-                <select id="filtroStatus" class="filter-control">
-                    <option value="todos">Todos os Status</option>
+            <!-- FILTROS E AÇÕES -->
+            <div class="flex flex-wrap gap-3 items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                
+                <!-- BOTÕES -->
+                <div class="flex gap-2">
+                    <button id="btnPendencias" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
+                        🚚 Follow-up
+                    </button>
+                    <button onclick="window.gerarPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
+                        📄 Baixar PDF
+                    </button>
+                </div>
+
+                <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
+
+                <!-- FILTRO DE DATA PREVISÃO -->
+                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-tight">Previsão:</span>
+                    <input type="date" id="filtroDataInicio" class="text-sm border-none outline-none bg-transparent text-slate-700 cursor-pointer">
+                    <span class="text-xs font-bold text-slate-400">até</span>
+                    <input type="date" id="filtroDataFim" class="text-sm border-none outline-none bg-transparent text-slate-700 cursor-pointer">
+                </div>
+
+                <!-- BUSCA E STATUS -->
+                <input type="text" id="inputBusca" placeholder="Buscar nome, cód, nimbi..." class="filter-control flex-1 min-w-[200px]">
+                <select id="filtroStatus" class="filter-control min-w-[150px]">
+                    <option value="todos">Todos Status</option>
+                    <option value="pendentes">⚠️ Pendentes</option>
                     <option value="solicitacao">Solicitação</option>
                     <option value="liberado">Liberado</option>
                     <option value="pedido">Pedido Gerado</option>
@@ -53,6 +82,7 @@
                     <option value="atendido">Atendido</option>
                     <option value="parcial">Parcial</option>
                 </select>
+                
             </div>
         </div>
 
@@ -65,6 +95,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // CREDENCIAIS DA MECÂNICA
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
             authDomain: "mecanica-699bb.firebaseapp.com",
@@ -79,39 +110,80 @@
         const db = getFirestore(app);
         const comprasRef = collection(db, "compras");
 
-        let todosRegistros = []; // Cache local para busca instantânea
+        let todosRegistros = [];
+        let registrosFiltrados = []; 
 
-        // Função para renderizar a lista com filtros aplicados
         const renderizarLista = () => {
             const container = document.getElementById('listaCompras');
             const busca = document.getElementById('inputBusca').value.toLowerCase();
             const statusFiltro = document.getElementById('filtroStatus').value;
+            
+            // Valores do Filtro de Data
+            const dInicio = document.getElementById('filtroDataInicio').value;
+            const dFim = document.getElementById('filtroDataFim').value;
 
-            const filtrados = todosRegistros.filter(item => {
+            registrosFiltrados = todosRegistros.filter(item => {
                 const nome = item.nome?.toLowerCase() || "";
                 const codigo = item.codigo?.toLowerCase() || "";
-                // ALTERADO: agora busca por 'codigoNimbi'
                 const nimbi = item.codigoNimbi?.toLowerCase() || "";
                 const status = item.status || "";
                 
+                // Filtro de Texto
                 const matchesBusca = nome.includes(busca) || codigo.includes(busca) || nimbi.includes(busca);
-                const matchesStatus = statusFiltro === "todos" || status === statusFiltro;
+                
+                // Filtro de Status
+                const matchesStatus = 
+                    statusFiltro === "todos" || 
+                    status === statusFiltro ||
+                    (statusFiltro === "pendentes" && (status === "pedido" || status === "parcial"));
 
-                return matchesBusca && matchesStatus;
+                // Filtro de Data de Previsão
+                let matchesData = true;
+                if (dInicio || dFim) {
+                    if (!item.dataPrevisao) {
+                        matchesData = false; // Ignorar quem não tem data se o filtro estiver ativo
+                    } else {
+                        if (dInicio && item.dataPrevisao < dInicio) matchesData = false;
+                        if (dFim && item.dataPrevisao > dFim) matchesData = false;
+                    }
+                }
+
+                return matchesBusca && matchesStatus && matchesData;
             });
 
-            if (filtrados.length === 0) {
+            if (registrosFiltrados.length === 0) {
                 container.innerHTML = `<div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">Nenhum registro encontrado</div>`;
                 return;
             }
 
             container.innerHTML = "";
-            filtrados.forEach(item => {
+            registrosFiltrados.forEach(item => {
                 const statusClass = `status-${item.status}`;
-                
-                // ALTERADO: Lógica para exibir o Nimbi apenas se ele existir
-                const nimbiDisplay = item.codigoNimbi 
-                    ? `<span class="text-purple-500 ml-2">| Nimbi: ${item.codigoNimbi}</span>` 
+                const nimbiDisplay = item.codigoNimbi ? `<span class="text-purple-500 ml-2">| Nimbi: ${item.codigoNimbi}</span>` : '';
+
+                let infoFalta = '';
+                if (item.status === 'parcial') {
+                    const total = parseFloat(item.quantidade) || 0;
+                    const recebido = parseFloat(item.qtdRecebida) || 0;
+                    const falta = total - recebido;
+                    
+                    infoFalta = `
+                        <div class="text-[10px] font-bold text-red-600 mt-1 bg-red-50 p-1.5 rounded text-center border border-red-100 uppercase tracking-tighter">
+                            Falta chegar: ${falta > 0 ? falta : 0}
+                        </div>
+                    `;
+                }
+
+                const inputParcialDisplay = item.status === 'parcial' 
+                    ? `
+                    <div class="w-32 flex flex-col justify-start">
+                        <input type="number" class="obs-input bg-purple-50 border-purple-200 text-purple-700 font-semibold text-center" 
+                            placeholder="Qtd chegou" 
+                            value="${item.qtdRecebida || ''}" 
+                            onchange="window.atualizarQtdRecebida('${item.id}', this.value)"
+                            title="Informe a quantidade que já foi entregue">
+                        ${infoFalta}
+                    </div>` 
                     : '';
 
                 const card = document.createElement('div');
@@ -126,12 +198,28 @@
                             <div class="text-[11px] font-bold text-blue-500 uppercase mt-1">${item.local || 'Geral'}</div>
                         </div>
                         
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
-                            <div><div class="text-[9px] font-black text-slate-300 uppercase">Qtd</div><div class="font-bold text-slate-700">${item.quantidade}</div></div>
-                            <div><div class="text-[9px] font-black text-slate-300 uppercase">Total</div><div class="font-bold text-green-600">R$ ${parseFloat(item.valorTotal).toFixed(2)}</div></div>
+                        <!-- GRID ATUALIZADO: Com campo Data de Previsão -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center items-center">
+                            <div>
+                                <div class="text-[9px] font-black text-slate-300 uppercase">Qtd</div>
+                                <div class="font-bold text-slate-700">${item.quantidade}</div>
+                            </div>
+                            <div>
+                                <div class="text-[9px] font-black text-slate-300 uppercase">Total</div>
+                                <div class="font-bold text-green-600">R$ ${parseFloat(item.valorTotal || 0).toFixed(2)}</div>
+                            </div>
+                            
+                            <!-- NOVO CAMPO: Data Prevista -->
+                            <div class="bg-slate-50 p-1.5 rounded border border-slate-100">
+                                <div class="text-[9px] font-black text-blue-400 uppercase">Previsão</div>
+                                <input type="date" value="${item.dataPrevisao || ''}" 
+                                    onchange="window.atualizarDataPrevisao('${item.id}', this.value)" 
+                                    class="text-[11px] font-bold text-slate-700 bg-transparent outline-none w-full text-center cursor-pointer hover:text-blue-600 transition-colors">
+                            </div>
+
                             <div class="col-span-2 sm:col-span-1">
                                 <select onchange="window.atualizarStatus('${item.id}', this.value)" 
-                                    class="text-[10px] font-black uppercase px-3 py-2 rounded-lg outline-none cursor-pointer transition-colors ${statusClass}">
+                                    class="text-[10px] font-black uppercase px-3 py-2 rounded-lg outline-none cursor-pointer transition-colors w-full ${statusClass}">
                                     <option value="solicitacao" ${item.status === 'solicitacao' ? 'selected' : ''}>Solicitação</option>
                                     <option value="liberado" ${item.status === 'liberado' ? 'selected' : ''}>Liberado</option>
                                     <option value="pedido" ${item.status === 'pedido' ? 'selected' : ''}>Pedido Gerado</option>
@@ -143,14 +231,15 @@
                         </div>
                     </div>
 
-                    <div class="flex gap-3 items-center">
+                    <div class="flex gap-3 items-start">
+                        ${inputParcialDisplay}
                         <div class="flex-1">
                             <input type="text" class="obs-input bg-slate-50" 
                                 placeholder="Adicionar observação técnica..." 
                                 value="${item.observacao || ''}" 
                                 onchange="window.atualizarObs('${item.id}', this.value)">
                         </div>
-                        <button onclick="window.excluir('${item.id}')" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                        <button onclick="window.excluir('${item.id}')" class="p-2 text-slate-300 hover:text-red-500 transition-colors mt-1">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -161,34 +250,126 @@
             });
         };
 
-        // Escutar mudanças no Banco (Tempo Real)
+        window.gerarPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            const filtroAtual = document.getElementById('filtroStatus').options[document.getElementById('filtroStatus').selectedIndex].text;
+            
+            const dInicio = document.getElementById('filtroDataInicio').value;
+            const dFim = document.getElementById('filtroDataFim').value;
+            
+            let textoData = "";
+            if (dInicio || dFim) {
+                const formataBr = dataIso => dataIso.split('-').reverse().join('/');
+                if (dInicio && dFim) textoData = ` | Período Previsto: ${formataBr(dInicio)} a ${formataBr(dFim)}`;
+                else if (dInicio) textoData = ` | Período Previsto: A partir de ${formataBr(dInicio)}`;
+                else if (dFim) textoData = ` | Período Previsto: Até ${formataBr(dFim)}`;
+            }
+
+            doc.setFontSize(14);
+            doc.text(`Relatório de Compras Mecânica - Filtro: ${filtroAtual}${textoData}`, 14, 15);
+            
+            doc.setFontSize(9);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
+
+            // Coluna de Previsão adicionada na tabela do PDF
+            const colunas = [["Cód / Nimbi", "Material", "Local", "Status", "Previsão", "Qtd Total", "Chegou", "Falta", "Valor (R$)"]];
+            
+            const linhas = registrosFiltrados.map(item => {
+                const cod = item.codigo || 'S/C';
+                const nimbi = item.codigoNimbi ? `\nNimbi: ${item.codigoNimbi}` : '';
+                
+                let chegou = "-";
+                let falta = "-";
+                
+                if (item.status === 'parcial') {
+                    const t = parseFloat(item.quantidade) || 0;
+                    const r = parseFloat(item.qtdRecebida) || 0;
+                    chegou = r.toString();
+                    falta = (t - r).toString();
+                }
+
+                const statusFormatado = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+                
+                const dataPrevFormatada = item.dataPrevisao 
+                    ? item.dataPrevisao.split('-').reverse().join('/') 
+                    : '-';
+
+                return [
+                    cod + nimbi,
+                    item.nome,
+                    item.local || 'Geral',
+                    statusFormatado,
+                    dataPrevFormatada,
+                    item.quantidade || '0',
+                    chegou,
+                    falta,
+                    `R$ ${parseFloat(item.valorTotal || 0).toFixed(2)}`
+                ];
+            });
+
+            doc.autoTable({
+                head: colunas,
+                body: linhas,
+                startY: 28,
+                styles: { fontSize: 8.5, cellPadding: 3 },
+                headStyles: { fillColor: [37, 99, 235] },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                columnStyles: {
+                    4: { halign: 'center', fontStyle: 'bold' }, // Previsão
+                    5: { halign: 'center' }, // Qtd Total
+                    6: { halign: 'center' }, // Chegou
+                    7: { halign: 'center', textColor: [220, 38, 38] }, // Falta
+                    8: { halign: 'right' }   // Valor Total
+                }
+            });
+
+            doc.save(`Relatorio_Compras_Mecanica_${new Date().getTime()}.pdf`);
+        };
+
         onSnapshot(query(comprasRef, orderBy("dataCriacao", "desc")), (snap) => {
             todosRegistros = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderizarLista();
         });
 
-        // Listeners para os filtros
         document.getElementById('inputBusca').addEventListener('input', renderizarLista);
         document.getElementById('filtroStatus').addEventListener('change', renderizarLista);
+        
+        // Listeners para os campos de data
+        document.getElementById('filtroDataInicio').addEventListener('change', renderizarLista);
+        document.getElementById('filtroDataFim').addEventListener('change', renderizarLista);
+        
+        document.getElementById('btnPendencias').addEventListener('click', () => {
+            document.getElementById('filtroStatus').value = 'pendentes';
+            renderizarLista();
+        });
 
-        // Funções Globais
+        // NOVA FUNÇÃO GLOBAL para salvar data de previsão
+        window.atualizarDataPrevisao = async (id, dataISO) => {
+            try { await updateDoc(doc(db, "compras", id), { dataPrevisao: dataISO }); } 
+            catch (e) { console.error("Erro ao atualizar previsão:", e); }
+        };
+
         window.atualizarStatus = async (id, novoStatus) => {
-            try {
-                await updateDoc(doc(db, "compras", id), { status: novoStatus });
-            } catch (e) { console.error("Erro ao atualizar status:", e); }
+            try { await updateDoc(doc(db, "compras", id), { status: novoStatus }); } 
+            catch (e) { console.error("Erro ao atualizar status:", e); }
+        };
+
+        window.atualizarQtdRecebida = async (id, valor) => {
+            try { await updateDoc(doc(db, "compras", id), { qtdRecebida: valor }); } 
+            catch (e) { console.error("Erro ao atualizar quantidade recebida:", e); }
         };
 
         window.atualizarObs = async (id, texto) => {
-            try {
-                await updateDoc(doc(db, "compras", id), { observacao: texto });
-            } catch (e) { console.error("Erro ao atualizar OBS:", e); }
+            try { await updateDoc(doc(db, "compras", id), { observacao: texto }); } 
+            catch (e) { console.error("Erro ao atualizar OBS:", e); }
         };
 
         window.excluir = async (id) => {
             if(confirm("Deseja excluir permanentemente este registro?")) {
-                try {
-                    await deleteDoc(doc(db, "compras", id));
-                } catch (e) { console.error("Erro ao excluir:", e); }
+                try { await deleteDoc(doc(db, "compras", id)); } 
+                catch (e) { console.error("Erro ao excluir:", e); }
             }
         };
     </script>

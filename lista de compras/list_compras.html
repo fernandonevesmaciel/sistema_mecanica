@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        :root { --primary: #3b82f6; --border: #e2e8f0; }
+        :root { --primary: #f97316; --border: #e2e8f0; } /* Cor Laranja para Mecânica */
         .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; box-sizing: border-box; z-index: 1000; }
         body { padding-top: 85px; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
@@ -22,20 +22,20 @@
 </head>
 <body class="bg-slate-50 min-h-screen px-4 pb-12">
     <nav class="navbar shadow-sm">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">⚙️ MECÂNICA APP</div>
-        <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>⚙️</span> MECÂNICA APP</div>
+        <a href="../principal.html" class="text-slate-500 hover:text-orange-500 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
     </nav>
 
     <div class="max-w-6xl mx-auto">
         <div class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
             <div>
-                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-blue-600 uppercase">Orçamentos Mensais</h1>
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-orange-500 uppercase">Orçamentos Mensais</h1>
                 <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Sincronização Automática para Compras</p>
             </div>
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex flex-col">
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Meta deste Mês</label>
-                    <input type="text" id="limiteOrcamento" oninput="aplicarMascara(this)" class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-400 w-48 text-right">
+                    <input type="text" id="limiteOrcamento" disabled oninput="aplicarMascara(this)" class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-orange-400 w-48 text-right disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
                 <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
                     <select id="selectMes" onchange="trocarPeriodo()" class="bg-transparent px-2 font-bold text-slate-700 outline-none">
@@ -51,7 +51,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
                 <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Pesquisar Produto</h2>
-                <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)" placeholder="Digite nome ou código..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 mb-4 transition-all">
+                <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)" placeholder="Digite nome ou código..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 mb-4 transition-all">
                 <div id="listaSugestoes" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scroll"></div>
             </div>
 
@@ -59,7 +59,7 @@
                 <div class="bg-slate-800 p-4 flex justify-between items-center shrink-0">
                     <h2 class="text-white font-bold text-xs uppercase tracking-widest" id="labelPeriodo">Carregando...</h2>
                     <div class="flex items-center gap-2">
-                        <button onclick="window.exportarPDF()" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR PDF</button>
+                        <button id="btnGerarPDF" onclick="window.exportarPDF()" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR PDF</button>
                         <button onclick="window.exportarLibreOffice()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR PLANILHA</button>
                     </div>
                 </div>
@@ -77,26 +77,57 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const firebaseConfig = {
+        // ================= CONFIGURAÇÕES FIREBASE (INVERTIDAS PARA MECÂNICA) =================
+        const firebaseConfigMecanica = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
             authDomain: "mecanica-699bb.firebaseapp.com",
             projectId: "mecanica-699bb",
-            storageBucket: "mecanica-699bb.firebasestorage.app",
             messagingSenderId: "223675812288",
             appId: "1:223675812288:web:f91f3dab6705fa7a2aa025",
             measurementId: "G-G78PR55F9F"
         };
 
-        const app = initializeApp(firebaseConfig);
+        const firebaseConfigEletrica = {
+            apiKey: "AIzaSyB_w4-z_onAEUf10ROfYCmvnm6Fkkp2sYo",
+            authDomain: "eletrica-8c96e.firebaseapp.com",
+            projectId: "eletrica-8c96e",
+            storageBucket: "eletrica-8c96e.firebasestorage.app",
+            messagingSenderId: "456815528430",
+            appId: "1:456815528430:web:4cf873dc8071c9a2bbe6ff"
+        };
+
+        // Inicializa o app primário (Mecânica)
+        const app = initializeApp(firebaseConfigMecanica);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Inicializa o app secundário (Elétrica)
+        const appEletrica = initializeApp(firebaseConfigEletrica, "appEletrica");
+        const dbEletrica = getFirestore(appEletrica);
+
+        const ADMIN_ID = "kBGhpXomEbcn8aqxrvQr1z4hWz22";
+        let isUserAdmin = false;
+
+        onAuthStateChanged(auth, (user) => {
+            const inputLimite = document.getElementById('limiteOrcamento');
+            if (user && user.uid === ADMIN_ID) {
+                isUserAdmin = true;
+                inputLimite.disabled = false;
+            } else {
+                isUserAdmin = false;
+                inputLimite.disabled = true;
+            }
+        });
 
         let todosProdutos = [];
         let carrinhoAtual = [];
         let periodoId = "";
         let somaTotalGlobal = 0;
         let valorLimiteDesteMes = 0;
+        let editandoId = null;
 
         async function init() {
             const snap = await getDocs(collection(db, "produtos"));
@@ -118,6 +149,7 @@
         };
 
         async function salvarMetaNoBanco() {
+            if (!isUserAdmin) return; 
             await setDoc(doc(db, "listas_mensais", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
         }
 
@@ -127,6 +159,7 @@
             periodoId = `${mes}-${ano}`;
             const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             document.getElementById('labelPeriodo').innerText = `Orçamento: ${mesNome} / ${ano}`;
+            editandoId = null;
 
             onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
                 if (docSnap.exists()) {
@@ -152,18 +185,19 @@
             lista.innerHTML = filtrados.map(p => {
                 const jaEstaNoCarrinho = carrinhoAtual.some(item => item.id === p.id);
                 return `
-                <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-blue-200">
+                <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-orange-200">
                     <p class="font-bold text-slate-800 text-sm leading-tight">${p.nome}</p>
                     <p class="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-tighter">Cód: ${p.codigo} | Unit: R$ ${p.valor}</p>
                     
-                    <div class="grid grid-cols-2 gap-2 mt-1">
-                        <input type="text" id="local-${p.id}" placeholder="Local (ex: Setor A)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-blue-400">
-                        <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi (Opc)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-blue-400">
+                    <div class="grid grid-cols-3 gap-2 mt-1">
+                        <input type="text" id="local-${p.id}" placeholder="Local (ex: Setor A)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                        <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                        <input type="text" id="movimentacao-${p.id}" placeholder="Cód. Mov." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
                     </div>
 
                     <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
                         <input type="number" id="qtd-${p.id}" value="1" min="1" class="w-16 p-2 bg-slate-100 border rounded-lg text-sm font-bold text-center outline-none">
-                        <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md ${jaEstaNoCarrinho ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100'}">${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}</button>
+                        <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md ${jaEstaNoCarrinho ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100'}">${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}</button>
                     </div>
                 </div>`;
             }).join('');
@@ -174,24 +208,26 @@
             const qtd = parseInt(document.getElementById(`qtd-${id}`).value) || 1;
             const localUso = document.getElementById(`local-${id}`).value || "Geral";
             const codNimbi = document.getElementById(`nimbi-${id}`).value || "";
+            const codMov = document.getElementById(`movimentacao-${id}`).value || "";
             
             const valorUnit = parseFloat(String(prod.valor).replace(',', '.'));
             
             if (!carrinhoAtual.some(i => i.id === id)) {
-                const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd, local: localUso, codigoNimbi: codNimbi }];
+                const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd, local: localUso, codigoNimbi: codNimbi, codigoMovimentacao: codMov }];
                 await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
 
                 await addDoc(collection(db, "compras"), {
                     nome: prod.nome,
                     codigo: prod.codigo || "S/C",
                     codigoNimbi: codNimbi,
+                    codigoMovimentacao: codMov,
                     local: localUso,
                     quantidade: qtd,
                     valorUnitario: valorUnit,
                     valorTotal: valorUnit * qtd,
                     data: new Date().toISOString().split('T')[0],
                     status: "solicitacao",
-                    observacao: codNimbi ? `Nimbi: ${codNimbi}` : "",
+                    observacao: `Nimbi: ${codNimbi} | Mov: ${codMov}`,
                     dataCriacao: new Date()
                 });
             }
@@ -202,41 +238,227 @@
             await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
         };
 
-        // EXPORTAÇÃO PDF
-        window.exportarPDF = () => {
+        window.editar = (id) => {
+            editandoId = id;
+            renderizarCarrinho();
+        };
+
+        window.cancelarEdicao = () => {
+            editandoId = null;
+            renderizarCarrinho();
+        };
+
+        window.salvarEdicao = async (id) => {
+            const index = carrinhoAtual.findIndex(i => i.id === id);
+            if (index !== -1) {
+                const novaQtd = parseInt(document.getElementById(`edit-qtd-${id}`).value) || 1;
+                const novoLocal = document.getElementById(`edit-local-${id}`).value || "Geral";
+                const novoNimbi = document.getElementById(`edit-nimbi-${id}`).value || "";
+                const novoMov = document.getElementById(`edit-mov-${id}`).value || "";
+
+                carrinhoAtual[index].quantidade = novaQtd;
+                carrinhoAtual[index].local = novoLocal;
+                carrinhoAtual[index].codigoNimbi = novoNimbi;
+                carrinhoAtual[index].codigoMovimentacao = novoMov;
+
+                editandoId = null;
+                renderizarCarrinho();
+
+                await setDoc(doc(db, "listas_mensais", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
+            }
+        };
+
+        // ================= EXPORTAÇÃO PDF AGRUPADA (MECÂNICA + ELÉTRICA) =================
+        window.exportarPDF = async () => {
+            const btn = document.getElementById('btnGerarPDF');
+            const textoOriginal = btn.innerText;
+            btn.innerText = "GERANDO..."; 
+
             const { jsPDF } = window.jspdf;
             const docPdf = new jsPDF();
             const mesRef = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             const anoRef = document.getElementById('selectAno').value;
 
-            docPdf.setFontSize(16);
-            docPdf.text(`Orçamento Elétrica: ${mesRef} / ${anoRef}`, 14, 15);
+            // Prepara a lista baseada na Mecânica
+            let itensParaRelatorio = carrinhoAtual.map(i => ({...i, origem: "Mecânica"}));
+            let metaEletrica = 0;
+
+            // Se for ADMIN, busca a lista de compras do banco da Elétrica
+            if (isUserAdmin) {
+                try {
+                    const docRef = doc(dbEletrica, "listas_mensais", periodoId);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const dadosEle = docSnap.data();
+                        const itensEle = dadosEle.itens || [];
+                        metaEletrica = dadosEle.meta || 0;
+                        
+                        itensEle.forEach(i => i.origem = "Elétrica");
+                        itensParaRelatorio = [...itensParaRelatorio, ...itensEle];
+                    }
+                } catch (erro) {
+                    console.error("Erro ao buscar dados da Elétrica para o PDF:", erro);
+                }
+            }
+
+            // Agrupa os itens baseados no Código NIMBI 
+            const gruposNimbi = {};
+            const totaisMovimentacao = {}; // NOVO: Para guardar totais de movimentação
             
-            const colunas = ["Cód", "Nimbi", "Produto", "Local", "Qtd", "Unit", "Total"];
-            const linhas = carrinhoAtual.map(item => {
-                const vUnit = parseFloat(String(item.valor).replace(',', '.'));
-                return [
-                    item.codigo || "-", 
-                    item.codigoNimbi || "-",
-                    item.nome, 
-                    item.local || "Geral", 
-                    item.quantidade,
-                    `R$ ${item.valor}`, 
-                    `R$ ${(vUnit * item.quantidade).toFixed(2).replace('.', ',')}`
-                ];
+            itensParaRelatorio.forEach(item => {
+                // Agrupamento Nimbi
+                const nimbi = (item.codigoNimbi || "").trim() || "Sem Código Nimbi";
+                if (!gruposNimbi[nimbi]) {
+                    gruposNimbi[nimbi] = { itens: [], subtotal: 0 };
+                }
+                gruposNimbi[nimbi].itens.push(item);
+                
+                const vUnit = parseFloat(String(item.valor).replace(',', '.')) || 0;
+                const qtd = parseInt(item.quantidade) || 1;
+                const totalLinha = vUnit * qtd;
+
+                gruposNimbi[nimbi].subtotal += totalLinha;
+
+                // NOVO: Agrupamento de totais por Movimentação
+                const mov = (item.codigoMovimentacao || "").trim() || "Sem Cód. Mov.";
+                if (!totaisMovimentacao[mov]) totaisMovimentacao[mov] = 0;
+                totaisMovimentacao[mov] += totalLinha;
             });
 
-            docPdf.autoTable({ 
-                head: [colunas], 
-                body: linhas, 
-                startY: 25,
-                theme: 'striped',
-                headStyles: { fillColor: [59, 130, 246] },
-                styles: { fontSize: 8 }
+            // Criação visual do PDF
+            docPdf.setFontSize(14);
+            docPdf.text(`Relatório de Compras: ${mesRef} / ${anoRef}`, 14, 15);
+            
+            if(isUserAdmin) {
+                docPdf.setFontSize(9);
+                docPdf.setTextColor(100, 100, 100);
+                docPdf.text(`(Contempla dados unificados de Mecânica e Elétrica)`, 14, 20);
+                docPdf.setTextColor(0, 0, 0);
+            }
+
+            let currentY = isUserAdmin ? 25 : 22;
+            let gastoTotalSomado = 0;
+
+            // Gera uma tabela para cada Código Nimbi
+            const chavesOrdenadas = Object.keys(gruposNimbi).sort();
+
+            for (const nimbi of chavesOrdenadas) {
+                const grupo = gruposNimbi[nimbi];
+
+                // Verifica se a página está acabando para não quebrar a tabela no meio
+                if (currentY > 260) {
+                    docPdf.addPage();
+                    currentY = 20;
+                }
+
+                // Título do Grupo Nimbi
+                docPdf.setFontSize(11);
+                docPdf.setFont(undefined, 'bold');
+                docPdf.setTextColor(249, 115, 22); // Laranja Tailwind
+                docPdf.text(`Cód Nimbi: ${nimbi}`, 14, currentY);
+                docPdf.setTextColor(0, 0, 0); // Volta pro preto
+                currentY += 5;
+
+                const colunas = ["Cód", "Mov", "Produto", "Local", "Qtd", "Unit", "Total"];
+                if (isUserAdmin) colunas.push("Origem");
+
+                const linhas = grupo.itens.map(item => {
+                    const vUnit = parseFloat(String(item.valor).replace(',', '.')) || 0;
+                    const totalLinha = vUnit * item.quantidade;
+                    
+                    const row = [
+                        item.codigo || "-", 
+                        item.codigoMovimentacao || "-", 
+                        item.nome, 
+                        item.local || "Geral", 
+                        item.quantidade,
+                        `R$ ${vUnit.toFixed(2).replace('.', ',')}`, 
+                        `R$ ${totalLinha.toFixed(2).replace('.', ',')}`
+                    ];
+                    
+                    if (isUserAdmin) row.push(item.origem);
+                    return row;
+                });
+
+                docPdf.autoTable({ 
+                    head: [colunas], 
+                    body: linhas, 
+                    startY: currentY,
+                    theme: 'striped',
+                    headStyles: { fillColor: [249, 115, 22] }, // Cor Laranja na tabela
+                    styles: { fontSize: 8 },
+                    margin: { bottom: 15 } // Margem inferior
+                });
+
+                currentY = docPdf.lastAutoTable.finalY + 6;
+                
+                // Exibe o Subtotal deste Código Nimbi
+                docPdf.setFontSize(10);
+                docPdf.setFont(undefined, 'bold');
+                docPdf.text(`Cód Nimbi ${nimbi} Valor R$ ${grupo.subtotal.toFixed(2).replace('.', ',')}`, 14, currentY);
+                
+                currentY += 12; // Espaço para a próxima tabela
+                gastoTotalSomado += grupo.subtotal;
+            }
+
+            // ================= RESUMO FINAL =================
+            const chavesMov = Object.keys(totaisMovimentacao).sort();
+            
+            // Calcula altura necessária para o box do resumo
+            let alturaResumoBase = isUserAdmin ? 35 : 20; 
+            let alturaSessaoMovimentos = 15 + (chavesMov.length * 5); // Título + Margens + Itens
+            let alturaTotalBox = alturaResumoBase + alturaSessaoMovimentos;
+
+            if (currentY + alturaTotalBox > 280) {
+                docPdf.addPage();
+                currentY = 20;
+            }
+
+            // Box de Resumo (Fundo Cinza)
+            docPdf.setFillColor(241, 245, 249); // slate-100
+            docPdf.rect(14, currentY - 5, 180, alturaTotalBox, 'F');
+            
+            // Textos do Resumo de Gastos e Metas
+            docPdf.setFontSize(11);
+            docPdf.setFont(undefined, 'bold');
+            docPdf.text(`RESUMO GERAL DO MÊS`, 18, currentY + 2);
+            currentY += 10;
+            
+            docPdf.setFontSize(10);
+            docPdf.setFont(undefined, 'normal');
+            docPdf.text(`Total de Compras Solicitadas: R$ ${gastoTotalSomado.toFixed(2).replace('.', ',')}`, 18, currentY);
+            currentY += 5;
+            docPdf.text(`Meta (Mecânica): R$ ${valorLimiteDesteMes.toFixed(2).replace('.', ',')}`, 18, currentY);
+            
+            if (isUserAdmin) {
+                currentY += 5;
+                docPdf.text(`Meta (Elétrica): R$ ${metaEletrica.toFixed(2).replace('.', ',')}`, 18, currentY);
+                currentY += 5;
+                const metaUnificada = valorLimiteDesteMes + metaEletrica;
+                docPdf.setFont(undefined, 'bold');
+                docPdf.text(`Meta Total Unificada: R$ ${metaUnificada.toFixed(2).replace('.', ',')}`, 18, currentY);
+            }
+
+            // Quebra visual e Sessão de Totais por Movimentação
+            currentY += 10;
+            docPdf.setFontSize(10);
+            docPdf.setFont(undefined, 'bold');
+            docPdf.text(`TOTAL GASTO POR CÓDIGO DE MOVIMENTAÇÃO:`, 18, currentY);
+            
+            currentY += 6;
+            docPdf.setFontSize(9);
+            docPdf.setFont(undefined, 'normal');
+            
+            chavesMov.forEach(mov => {
+                const totalMovStr = `R$ ${totaisMovimentacao[mov].toFixed(2).replace('.', ',')}`;
+                docPdf.text(`- Cód Mov: ${mov} -> ${totalMovStr}`, 18, currentY);
+                currentY += 5;
             });
 
-            docPdf.text(`Subtotal Acumulado: ${document.getElementById('totalPreco').innerText}`, 14, docPdf.lastAutoTable.finalY + 10);
-            docPdf.save(`Orcamento_${mesRef}_${anoRef}.pdf`);
+            docPdf.save(`Orcamento_Mecanica_${mesRef}_${anoRef}.pdf`);
+            
+            // Volta o botão ao normal
+            btn.innerText = textoOriginal;
         };
 
         // EXPORTAÇÃO LIBREOFFICE / EXCEL
@@ -251,6 +473,7 @@
                 return {
                     "Código": item.codigo || "S/C",
                     "Cód. Nimbi": item.codigoNimbi || "",
+                    "Cód. Mov.": item.codigoMovimentacao || "",
                     "Descrição do Produto": item.nome,
                     "Local de Aplicação": item.local || "Geral",
                     "Qtd": item.quantidade,
@@ -263,11 +486,11 @@
             const ws = XLSX.utils.json_to_sheet(dadosExcel);
 
             ws['!cols'] = [
-                { wch: 15 }, { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }
+                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }
             ];
 
             XLSX.utils.book_append_sheet(wb, ws, "Orcamento");
-            XLSX.writeFile(wb, `Orcamento_Eletrica_${mesRef}_${anoRef}.xlsx`);
+            XLSX.writeFile(wb, `Orcamento_Mecanica_${mesRef}_${anoRef}.xlsx`);
         };
 
         function renderizarCarrinho() {
@@ -283,27 +506,48 @@
                 const totalLinha = (parseFloat(String(p.valor).replace(',', '.')) || 0) * (p.quantidade || 1);
                 somaTotalGlobal += totalLinha;
                 
-                // Exibe etiqueta Nimbi se existir
+                if (editandoId === p.id) {
+                    return `
+                    <li class="p-4 bg-orange-50 border-b border-orange-100 flex flex-col gap-2">
+                        <p class="text-sm font-bold text-orange-800 leading-tight">Editando: ${p.nome}</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1">
+                            <input type="text" id="edit-local-${p.id}" value="${p.local || ''}" placeholder="Local" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                            <input type="text" id="edit-nimbi-${p.id}" value="${p.codigoNimbi || ''}" placeholder="Cód. Nimbi" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                            <input type="text" id="edit-mov-${p.id}" value="${p.codigoMovimentacao || ''}" placeholder="Cód. Mov." class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                            <input type="number" id="edit-qtd-${p.id}" value="${p.quantidade}" min="1" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-center outline-none focus:ring-1 focus:ring-orange-400">
+                        </div>
+                        <div class="flex justify-end gap-2 mt-2">
+                            <button onclick="cancelarEdicao()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold rounded-lg uppercase transition-colors">Cancelar</button>
+                            <button onclick="salvarEdicao('${p.id}')" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold rounded-lg uppercase shadow-sm transition-colors">Salvar Alterações</button>
+                        </div>
+                    </li>`;
+                }
+
                 const nimbiHtml = p.codigoNimbi ? `<span class="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold uppercase border border-purple-100">Nimbi: ${p.codigoNimbi}</span>` : '';
+                const movHtml = p.codigoMovimentacao ? `<span class="text-[9px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold uppercase border border-amber-100">Mov: ${p.codigoMovimentacao}</span>` : '';
 
                 return `
-                <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors">
-                    <div>
+                <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors border-b border-slate-50">
+                    <div class="flex-1 pr-4">
                         <p class="text-sm font-bold text-slate-700 leading-tight">${p.nome}</p>
                         <div class="flex flex-wrap gap-2 items-center mt-1">
                             <span class="text-[9px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300">Cód: ${p.codigo || 'S/C'}</span>
-
                             <p class="text-[10px] text-slate-400 font-black uppercase tracking-tight">${p.quantidade} un x R$ ${p.valor}</p>
-                            <span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100">${p.local || 'Geral'}</span>
+                            <span class="text-[9px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase border border-orange-100">${p.local || 'Geral'}</span>
                             ${nimbiHtml}
+                            ${movHtml}
                         </div>
                     </div>
-                    <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-4 shrink-0">
                         <span class="text-sm font-black text-slate-800 tracking-tighter">R$ ${totalLinha.toFixed(2).replace('.', ',')}</span>
-                        <button onclick="remover('${p.id}')" class="text-slate-200 hover:text-red-500 font-bold text-lg">✕</button>
+                        <div class="flex gap-1 bg-slate-100 rounded-lg p-1">
+                            <button onclick="editar('${p.id}')" class="p-1.5 text-orange-500 hover:bg-orange-200 hover:text-orange-700 rounded-md font-bold text-xs transition-colors" title="Editar">✏️</button>
+                            <button onclick="remover('${p.id}')" class="p-1.5 text-red-400 hover:bg-red-200 hover:text-red-600 rounded-md font-bold text-xs transition-colors" title="Remover">✕</button>
+                        </div>
                     </div>
                 </li>`;
             }).join('');
+            
             document.getElementById('totalPreco').innerText = `R$ ${somaTotalGlobal.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`;
             validarLimite();
         }

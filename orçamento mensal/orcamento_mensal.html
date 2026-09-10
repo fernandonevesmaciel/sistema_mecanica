@@ -58,7 +58,7 @@
 
     <nav class="navbar shadow-sm">
         <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">
-            ⚙️ MECÂNICA APP
+            <span>⚙️</span> MECÂNICA APP
         </div>
         <a href="../principal.html"
             class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors tracking-tighter">Voltar
@@ -66,8 +66,49 @@
     </nav>
 
     <div class="max-w-5xl mx-auto px-4">
-        <div
-            class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center justify-between gap-4">
+        
+        <!-- PAINEL ADMINISTRADOR (Oculto por padrão) -->
+        <div id="adminPanel" class="hidden bg-slate-800 p-5 rounded-2xl shadow-md mb-6 border border-slate-700 text-white">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-yellow-400">👑</span>
+                <h2 class="text-sm font-black uppercase tracking-widest text-slate-100">Painel do Administrador</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Data Início</label>
+                    <input type="date" id="dataInicio" class="w-full bg-slate-700 text-white text-sm font-bold p-2 rounded-xl outline-none border border-slate-600">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Data Fim</label>
+                    <input type="date" id="dataFim" class="w-full bg-slate-700 text-white text-sm font-bold p-2 rounded-xl outline-none border border-slate-600">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">CodMov Específico</label>
+                    <select id="filtroCodMov" class="w-full bg-slate-700 text-white text-sm font-bold p-2.5 rounded-xl outline-none border border-slate-600">
+                        <option value="TODOS">Todos os Códigos</option>
+                        <option value="373">373 - Elétrica</option>
+                        <option value="36/373">36/373 - Elétrica Estoque</option>
+                        <option value="42">42 - Mecânica</option>
+                        <option value="36/42">36/42 - Mecânica Estoque</option>
+                        <option value="43">43 - Conservação</option>
+                        <option value="36/43">36/43 - Conservação Estoque</option>
+                        <option value="309">309 - Serviços</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button onclick="gerarPdfAdminFiltrado()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all uppercase tracking-widest">
+                        PDF Período/Código
+                    </button>
+                    <button onclick="gerarPdfAnual()" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all uppercase tracking-widest">
+                        PDF Resumo Anual
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CABEÇALHO PADRÃO -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Análise Mensal</h1>
                 <p class="text-[10px] text-slate-400 font-bold uppercase">Gestão de Saldo e Gastos</p>
@@ -98,11 +139,12 @@
                 </div>
                 <button onclick="gerarPdfDashboard()"
                     class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-lg transition-all uppercase tracking-widest">
-                    Exportar PDF
+                    Exportar Mensal
                 </button>
             </div>
         </div>
 
+        <!-- CARDS DE VALORES -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Meta Orçamentária</p>
@@ -118,10 +160,10 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div
-                class="bg-slate-800 p-4 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex justify-between">
-                <span>Detalhamento de Itens</span>
+        <!-- LISTA MENSAL -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
+            <div class="bg-slate-200 p-4 text-slate-800 text-[10px] font-bold uppercase tracking-[0.2em] flex justify-between">
+                <span>Detalhamento de Itens (Mensal)</span>
                 <span id="periodoTexto">---</span>
             </div>
             <ul id="listaResumo" class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto custom-scroll"></ul>
@@ -130,7 +172,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
@@ -144,20 +187,72 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+const ADMIN_IDS = [
+            "0dN2teZrTkYkg26rBrKcEDpy5El1",
+            "kBGhpXomEbcn8aqxrvQr1z4hWz22"
+        ];
 
         let limiteGlobal = 0;
         let gastosGlobais = 0;
         let itensAtuais = [];
-        let unsub = null; // Para limpar o monitoramento anterior ao trocar de mês
+        let unsub = null; 
+        let isUserAdmin = false; // Declarada corretamente aqui
 
+        const NOMES_CODIGOS = {
+            "373": "373 - Elétrica compra direta",
+            "36/373": "36/373 - Elétrica para estoque",
+            "42": "42 - Mecânica compra direta",
+            "36/42": "36/42 - Mecânica para estoque",
+            "43": "43 - Conservação de bens direta",
+            "36/43": "36/43 - Conservação de bens para estoque",
+            "309": "309 - Serviços em geral"
+        };
+
+        // VERIFICAR AUTENTICAÇÃO DO ADMIN
+        onAuthStateChanged(auth, (user) => {
+            if (user && ADMIN_IDS.includes(String(user.uid).trim())) {
+                isUserAdmin = true;
+                const panel = document.getElementById('adminPanel');
+                if (panel) panel.classList.remove('hidden');
+            } else {
+                isUserAdmin = false;
+                const panel = document.getElementById('adminPanel');
+                if (panel) panel.classList.add('hidden');
+            }
+        });
+
+        // DESCOBRIR CÓDIGO DA MOVIMENTAÇÃO
+        window.descobrirCodigo = (item) => {
+            let valorCampo = String(item.codMov || item.codigoMovimentacao || item.codigo_movimentacao || item.categoria || "").trim();
+            if (valorCampo && valorCampo !== "undefined") {
+                if (NOMES_CODIGOS[valorCampo]) return valorCampo;
+                for (let chave in NOMES_CODIGOS) {
+                    if (valorCampo.startsWith(chave)) return chave;
+                }
+                return valorCampo;
+            }
+            let nomeItem = String(item.nome || "").trim();
+            for (let chave in NOMES_CODIGOS) {
+                if (nomeItem.startsWith(chave)) return chave;
+            }
+            return "Sem Código";
+        };
+
+        // INICIALIZAÇÃO
         async function init() {
             const d = new Date();
             document.getElementById('selectMes').value = String(d.getMonth() + 1).padStart(2, '0');
             document.getElementById('selectAno').value = d.getFullYear();
+            
+            document.getElementById('dataInicio').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+            document.getElementById('dataFim').value = d.toISOString().split('T')[0];
 
             carregarOrcamento();
         }
 
+        // CARREGAR ORÇAMENTO MENSAL
         window.carregarOrcamento = () => {
             const mes = document.getElementById('selectMes').value;
             const ano = document.getElementById('selectAno').value;
@@ -165,10 +260,8 @@
             const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             document.getElementById('periodoTexto').innerText = `${mesNome} / ${ano}`;
 
-            // Se já houver um monitoramento ativo, cancela ele antes de começar o novo mês
             if (unsub) unsub();
 
-            // Escuta em TEMPO REAL o documento do mês selecionado
             unsub = onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
@@ -182,6 +275,7 @@
             });
         };
 
+        // RENDERIZAR TELA
         function renderizarDashboard(itens) {
             const listaUI = document.getElementById('listaResumo');
             gastosGlobais = 0;
@@ -192,10 +286,15 @@
                 listaUI.innerHTML = itens.map(p => {
                     const sub = (Number(p.valor) || 0) * (p.quantidade || 1);
                     gastosGlobais += sub;
+                    const cod = descobrirCodigo(p);
+                    const labelCod = cod !== "Sem Código" ? `[${cod}] • ` : "";
+
                     return `
                 <li class="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors">
                     <div><p class="text-sm font-bold text-slate-700 leading-tight">${p.nome}</p>
-                    <p class="text-[10px] text-slate-400 font-black uppercase mt-1">${p.quantidade} un x R$ ${p.valor}</p></div>
+                    <p class="text-[10px] text-slate-400 font-black uppercase mt-1">
+                        ${labelCod} ${p.quantidade} un x R$ ${Number(p.valor || 0).toFixed(2).replace('.', ',')}
+                    </p></div>
                     <span class="text-sm font-black text-slate-800">R$ ${sub.toFixed(2).replace('.', ',')}</span>
                 </li>`;
                 }).join('');
@@ -207,44 +306,211 @@
             document.getElementById('cardMeta').innerText = limiteGlobal.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
             document.getElementById('cardGasto').innerText = gastosGlobais.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
             saldoUI.innerText = saldo.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-
             saldoUI.className = "text-2xl font-black " + (saldo >= 0 ? "positivo" : "negativo");
         }
 
-      // FUNÇÃO EXPORTAR PDF DASHBOARD
+        // EXPORTAÇÃO 1: MENSAL PADRÃO
         window.gerarPdfDashboard = () => {
             if (itensAtuais.length === 0) return alert("Nada para exportar!");
-            const { jsPDF } = window.jspdf;
-            const docPdf = new jsPDF();
             const mes = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             const ano = document.getElementById('selectAno').value;
+            gerarPdfBase(itensAtuais, limiteGlobal, gastosGlobais, `RELATÓRIO FINANCEIRO MENSAL (${mes}/${ano})`);
+        };
+
+        // EXPORTAÇÃO 2: ADMIN - FILTRADO POR DATA E CÓDIGO
+        window.gerarPdfAdminFiltrado = async () => {
+            const dataI = document.getElementById('dataInicio').value;
+            const dataF = document.getElementById('dataFim').value;
+            const codFiltro = document.getElementById('filtroCodMov').value;
+
+            if (!dataI || !dataF) return alert("Preencha as datas de início e fim!");
+            if (dataI > dataF) return alert("Data de início maior que a data fim!");
+
+            const d1 = new Date(dataI);
+            const d2 = new Date(dataF);
+            
+            let itensFiltrados = [];
+            let metaSomada = 0;
+            let gastoSomado = 0;
+
+            let anoAtual = d1.getFullYear();
+            let mesAtual = d1.getMonth() + 1;
+            const anoFim = d2.getFullYear();
+            const mesFim = d2.getMonth() + 1;
+
+            while (anoAtual < anoFim || (anoAtual === anoFim && mesAtual <= mesFim)) {
+                const mesFormat = String(mesAtual).padStart(2, '0');
+                const docRef = doc(db, "listas_mensais", `${mesFormat}-${anoAtual}`);
+                const snap = await getDoc(docRef);
+
+                if (snap.exists()) {
+                    const dados = snap.data();
+                    let itensMes = dados.itens || [];
+                    
+                    if (codFiltro !== "TODOS") {
+                        itensMes = itensMes.filter(i => descobrirCodigo(i) === codFiltro);
+                    }
+                    
+                    itensMes.forEach(it => {
+                        const sub = (Number(it.valor) || 0) * (it.quantidade || 1);
+                        gastoSomado += sub;
+                        itensFiltrados.push(it);
+                    });
+
+                    metaSomada += (dados.meta || 0); 
+                }
+
+                mesAtual++;
+                if (mesAtual > 12) {
+                    mesAtual = 1;
+                    anoAtual++;
+                }
+            }
+
+            if (itensFiltrados.length === 0) return alert("Nenhum item encontrado neste período/código!");
+
+            let titulo = `RELATÓRIO FILTRADO: ${codFiltro === "TODOS" ? "TODAS MOVIMENTAÇÕES" : codFiltro}\nPeríodo: ${dataI.split('-').reverse().join('/')} a ${dataF.split('-').reverse().join('/')}`;
+            gerarPdfBase(itensFiltrados, metaSomada, gastoSomado, titulo);
+        };
+
+        // EXPORTAÇÃO 3: ADMIN - RESUMO ANUAL
+        window.gerarPdfAnual = async () => {
+            const ano = document.getElementById('selectAno').value;
+            let metaAnual = 0;
+            let gastoAnual = 0;
+            const resumoMeses = [];
+
+            for (let i = 1; i <= 12; i++) {
+                const m = String(i).padStart(2, '0');
+                const snap = await getDoc(doc(db, "listas_mensais", `${m}-${ano}`));
+                
+                let meta = 0;
+                let gasto = 0;
+
+                if (snap.exists()) {
+                    const dados = snap.data();
+                    meta = dados.meta || 0;
+                    (dados.itens || []).forEach(it => {
+                        gasto += (Number(it.valor) || 0) * (Number(it.quantidade) || 1);
+                    });
+                }
+                
+                metaAnual += meta;
+                gastoAnual += gasto;
+                resumoMeses.push({ mes: m, meta, gasto, saldo: meta - gasto });
+            }
+
+            const { jsPDF } = window.jspdf;
+            const docPdf = new jsPDF();
 
             docPdf.setFontSize(18);
-            docPdf.text("RELATÓRIO FINANCEIRO MENSAL", 14, 20);
+            docPdf.text("RELATÓRIO FINANCEIRO ANUAL", 14, 20);
             docPdf.setFontSize(12);
-            docPdf.text(`Período: ${mes} / ${ano}`, 14, 28);
-            docPdf.text(`Meta Orçamentária: R$ ${limiteGlobal.toFixed(2).replace('.',',')}`, 14, 34);
-            docPdf.text(`Gasto Total: R$ ${gastosGlobais.toFixed(2).replace('.',',')}`, 14, 40);
-            
-            const saldo = limiteGlobal - gastosGlobais;
+            docPdf.text(`Ano Base: ${ano}`, 14, 28);
+            docPdf.text(`Meta Orçamentária Anual Total: R$ ${metaAnual.toFixed(2).replace('.', ',')}`, 14, 34);
+            docPdf.text(`Gasto Anual Total: R$ ${gastoAnual.toFixed(2).replace('.', ',')}`, 14, 40);
+
+            const saldo = metaAnual - gastoAnual;
             docPdf.setTextColor(saldo >= 0 ? 16 : 239, saldo >= 0 ? 185 : 68, saldo >= 0 ? 129 : 68);
-            docPdf.text(`SALDO FINAL: R$ ${saldo.toFixed(2).replace('.',',')}`, 14, 46);
+            docPdf.text(`SALDO ANUAL FINAL: R$ ${saldo.toFixed(2).replace('.', ',')}`, 14, 46);
             docPdf.setTextColor(0, 0, 0);
 
-            const body = itensAtuais.map(p => [
-                p.nome, p.quantidade, `R$ ${p.valor}`, `R$ ${((Number(p.valor)||0)*p.quantidade).toFixed(2).replace('.',',')}`
-            ]);
+            const corpoTabela = resumoMeses.map(m => {
+                return [
+                    `Mês ${m.mes}`, 
+                    `R$ ${m.meta.toFixed(2).replace('.', ',')}`, 
+                    `R$ ${m.gasto.toFixed(2).replace('.', ',')}`, 
+                    `R$ ${m.saldo.toFixed(2).replace('.', ',')}`
+                ];
+            });
 
             docPdf.autoTable({
                 startY: 55,
-                head: [['Descrição', 'Qtd', 'Unitário', 'Total']],
-                body: body,
-                theme: 'striped',
-                headStyles: { fillColor: [30, 41, 59] }
+                head: [['Mês', 'Meta Disponibilizada', 'Gastos do Mês', 'Saldo Mês']],
+                body: corpoTabela,
+                theme: 'grid',
+                headStyles: { fillColor: [30, 41, 59] },
+                styles: { halign: 'center' }
             });
 
-            docPdf.save(`Dashboard_${mes}_${ano}.pdf`);
+            docPdf.save(`Resumo_Anual_${ano}.pdf`);
         };
+
+        // MOTOR DE GERAÇÃO DE PDF (Agrupado por Subtotais)
+        function gerarPdfBase(listaItens, limite, gastos, tituloCabecalho) {
+            const { jsPDF } = window.jspdf;
+            const docPdf = new jsPDF();
+            
+            docPdf.setFontSize(16);
+            docPdf.text(tituloCabecalho, 14, 20);
+            docPdf.setFontSize(11);
+            docPdf.text(`Meta Considerada: R$ ${limite.toFixed(2).replace('.', ',')}`, 14, 30);
+            docPdf.text(`Gasto Considerado: R$ ${gastos.toFixed(2).replace('.', ',')}`, 14, 36);
+
+            const saldo = limite - gastos;
+            docPdf.setTextColor(saldo >= 0 ? 16 : 239, saldo >= 0 ? 185 : 68, saldo >= 0 ? 129 : 68);
+            docPdf.text(`SALDO NO PERÍODO: R$ ${saldo.toFixed(2).replace('.', ',')}`, 14, 42);
+            docPdf.setTextColor(0, 0, 0);
+
+            const grupos = { "373": [], "36/373": [], "42": [], "36/42": [], "43": [], "36/43": [], "309": [], "Sem Código": [] };
+
+            listaItens.forEach(p => {
+                const cod = descobrirCodigo(p);
+                if (!grupos[cod]) grupos[cod] = []; 
+                grupos[cod].push(p);
+            });
+
+            const categoriasKeys = Object.keys(grupos).filter(k => k !== "Sem Código");
+            categoriasKeys.push("Sem Código");
+
+            let currentY = 52;
+
+            for (const cod of categoriasKeys) {
+                const itensDoGrupo = grupos[cod];
+                if (!itensDoGrupo || itensDoGrupo.length === 0) continue;
+                
+                if (currentY > 260) {
+                    docPdf.addPage();
+                    currentY = 20;
+                }
+
+                let tituloGrupo = NOMES_CODIGOS[cod] || (cod === "Sem Código" ? "Itens Sem Código" : `MOVIMENTAÇÃO: ${cod}`);
+                
+                docPdf.setFontSize(11);
+                docPdf.setFont("helvetica", "bold");
+                docPdf.text(tituloGrupo.toUpperCase(), 14, currentY);
+                currentY += 4; 
+
+                let subtotalGrupo = 0;
+                const corpoTabela = itensDoGrupo.map(p => {
+                    const totalItem = (Number(p.valor) || 0) * (p.quantidade || 1);
+                    subtotalGrupo += totalItem;
+                    return [
+                        p.nome, p.quantidade, 
+                        `R$ ${Number(p.valor).toFixed(2).replace('.', ',')}`, 
+                        `R$ ${totalItem.toFixed(2).replace('.', ',')}`
+                    ];
+                });
+
+                corpoTabela.push([
+                    { content: `SUBTOTAL (${cod})`, colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [240, 240, 240] } },
+                    { content: `R$ ${subtotalGrupo.toFixed(2).replace('.', ',')}`, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }
+                ]);
+
+                docPdf.autoTable({
+                    startY: currentY,
+                    head: [['Descrição', 'Qtd', 'Unitário', 'Total']],
+                    body: corpoTabela,
+                    theme: 'striped',
+                    headStyles: { fillColor: [30, 41, 59] },
+                    margin: { bottom: 15 }
+                });
+
+                currentY = docPdf.lastAutoTable.finalY + 12;
+            }
+
+            docPdf.save(`Relatorio_Mecanica.pdf`);
+        }
 
         init();
     </script>

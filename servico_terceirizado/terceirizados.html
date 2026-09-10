@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ Mecânica App - Serviços Terceirizados</title>
+    <title>⚡ Elétrica App - Serviços Terceirizados</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- SheetJS para Exportação em Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        :root { --primary: #f97316; --border: #e2e8f0; }
+        :root { --primary: #3b82f6; --border: #e2e8f0; }
         .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; box-sizing: border-box; z-index: 1000; }
         body { padding-top: 85px; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
@@ -18,73 +20,147 @@
 </head>
 <body class="bg-slate-50 min-h-screen px-4 pb-12">
     <nav class="navbar shadow-sm">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>⚙️</span> MECÂNICA APP</div>
-        <a href="../principal.html" class="text-slate-500 hover:text-orange-500 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>⚡</span> ELÉTRICA APP</div>
+        <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
     </nav>
 
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         <div class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
             <div>
-                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-orange-500 uppercase">Serviços Terceirizados</h1>
-                <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Registro e Controle de Lançamentos</p>
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-blue-600 uppercase">Serviços Terceirizados</h1>
+                <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Registro Compartilhado (Mecânica e Elétrica)</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-2 px-4 rounded-xl shadow-sm transition-colors uppercase">Gerar Planilha (Excel)</button>
+                <button onclick="exportarPDF()" id="btnGerarPDF" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-2 px-4 rounded-xl shadow-sm transition-colors uppercase">Gerar PDF</button>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Formulário de Lançamento -->
-            <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+            <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
                 <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Novo Serviço</h2>
                 
                 <div class="space-y-4">
                     <div>
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Empresa Terceirizada</label>
-                        <input type="text" id="inputEmpresa" placeholder="Nome da Empresa..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 transition-all text-sm font-semibold text-slate-700">
+                        <input type="text" id="inputEmpresa" placeholder="Nome da Empresa..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 transition-all text-sm font-semibold text-slate-700">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Código Nimbi</label>
+                            <input type="text" id="inputNimbi" placeholder="Ex: 123456" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 transition-all text-sm font-semibold text-slate-700">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Status</label>
+                            <select id="inputStatus" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 transition-all text-sm font-semibold text-slate-700">
+                                <option value="Negociação">Negociação</option>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Atendido">Atendido</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div>
                         <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Descrição do Serviço</label>
-                        <textarea id="inputDescricao" rows="2" placeholder="O que será realizado?" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 transition-all text-sm font-semibold text-slate-700 custom-scroll"></textarea>
+                        <textarea id="inputDescricao" rows="2" placeholder="O que será realizado?" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 transition-all text-sm font-semibold text-slate-700 custom-scroll"></textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Data da Realização</label>
-                            <input type="date" id="inputData" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 transition-all text-sm font-semibold text-slate-700">
+                            <input type="date" id="inputData" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 transition-all text-sm font-semibold text-slate-700">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Valor Cobrado</label>
-                            <input type="text" id="inputValor" oninput="mascaraMoeda(this)" placeholder="R$ 0,00" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 transition-all text-sm font-semibold text-slate-700 text-right">
+                            <input type="text" id="inputValor" oninput="mascaraMoeda(this)" placeholder="R$ 0,00" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 transition-all text-sm font-semibold text-slate-700 text-right">
                         </div>
                     </div>
 
-                    <button onclick="adicionarServico()" class="w-full py-3 mt-2 rounded-xl text-xs font-black uppercase shadow-md bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100 transition-colors">＋ Registrar Serviço</button>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Primeiro Comentário (Opcional)</label>
+                        <input type="text" id="inputComentarioInicial" placeholder="Comentário inicial..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-400 transition-all text-sm font-semibold text-slate-700">
+                    </div>
+
+                    <button onclick="adicionarServico()" class="w-full py-3 mt-2 rounded-xl text-xs font-black uppercase shadow-md bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100 transition-colors">＋ Registrar Serviço</button>
                 </div>
             </div>
 
             <!-- Lista de Serviços -->
-            <div class="lg:col-span-7 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-fit">
-                <div class="bg-slate-800 p-4 flex justify-between items-center shrink-0">
+            <div class="lg:col-span-8 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-fit">
+                <div class="bg-slate-800 p-4 flex flex-wrap justify-between items-center shrink-0 gap-3">
                     <h2 class="text-white font-bold text-xs uppercase tracking-widest">Histórico de Serviços</h2>
-                    <button onclick="exportarPDF()" id="btnGerarPDF" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm transition-colors">GERAR PDF</button>
-                </div>
-                
-                <div class="p-4 bg-slate-50 border-b flex justify-between items-center shrink-0">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total em Serviços</span>
-                        <span id="totalServicos" class="text-2xl font-black text-slate-800 tracking-tighter">R$ 0,00</span>
+                    <div class="flex items-center gap-3">
+                        <button id="btnFiltroFollowUp" onclick="alternarFiltroFollowUp()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] font-bold py-1.5 px-3 rounded-lg border border-slate-600 transition-colors uppercase">
+                            Follow-up: Desativado
+                        </button>
+                        <span id="totalServicos" class="text-white font-black text-sm">R$ 0,00</span>
                     </div>
                 </div>
 
-                <ul id="listaServicosUI" class="divide-y divide-slate-100 overflow-y-auto max-h-[500px] custom-scroll min-h-[300px]">
+                <ul id="listaServicosUI" class="divide-y divide-slate-100 overflow-y-auto max-h-[650px] custom-scroll min-h-[300px] p-4 space-y-4">
                     <!-- Renderizado via JS -->
                 </ul>
             </div>
         </div>
     </div>
 
+    <!-- Modal de Edição / Acompanhamento -->
+    <div id="modalEdicao" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto custom-scroll">
+            <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Editar / Gerenciar Serviço</h3>
+            <input type="hidden" id="editId">
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Código Nimbi</label>
+                        <input type="text" id="editNimbi" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Status</label>
+                        <select id="editStatus" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700">
+                            <option value="Negociação">Negociação</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Atendido">Atendido</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Adicionar Novo Comentário</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="editNovoComentario" placeholder="Escreva uma observação..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700">
+                        <button onclick="adicionarComentarioModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 rounded-xl text-xs uppercase">Inserir</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Histórico de Comentários</label>
+                    <div id="editHistoricoComentarios" class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 space-y-2 max-h-40 overflow-y-auto custom-scroll"></div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="salvarEdicaoModal()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl uppercase text-xs">Salvar Alterações</button>
+                    <button onclick="fecharModal()" class="py-3 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl uppercase text-xs">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfigEletrica = {
+            apiKey: "AIzaSyB_w4-z_onAEUf10ROfYCmvnm6Fkkp2sYo",
+            authDomain: "eletrica-8c96e.firebaseapp.com",
+            projectId: "eletrica-8c96e",
+            storageBucket: "eletrica-8c96e.firebasestorage.app",
+            messagingSenderId: "456815528430",
+            appId: "1:456815528430:web:4cf873dc8071c9a2bbe6ff"
+        };
 
         const firebaseConfigMecanica = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
@@ -95,11 +171,13 @@
             measurementId: "G-G78PR55F9F"
         };
 
-        const app = initializeApp(firebaseConfigMecanica);
-        const db = getFirestore(app);
+        const app = initializeApp(firebaseConfigEletrica);
+        const appMecanica = initializeApp(firebaseConfigMecanica, "appMecanica");
+        const dbMecanica = getFirestore(appMecanica);
 
         let servicosCadastrados = [];
-        let valorTotalServicos = 0;
+        let filtroFollowUpAtivo = false;
+        let servicoAtualEditando = null;
 
         window.mascaraMoeda = (campo) => {
             let v = campo.value.replace(/\D/g, "");
@@ -109,8 +187,26 @@
             campo.value = "R$ " + v;
         };
 
+        window.alternarFiltroFollowUp = () => {
+            filtroFollowUpAtivo = !filtroFollowUpAtivo;
+            const btn = document.getElementById('btnFiltroFollowUp');
+            if (filtroFollowUpAtivo) {
+                btn.innerText = "Follow-up: Ativo (Pend/Negoc)";
+                btn.className = "bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg border border-amber-500 transition-colors uppercase shadow-sm";
+            } else {
+                btn.innerText = "Follow-up: Desativado";
+                btn.className = "bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] font-bold py-1.5 px-3 rounded-lg border border-slate-600 transition-colors uppercase";
+            }
+            renderizarLista();
+        };
+
+        function obterServicosFiltrados() {
+            if (!filtroFollowUpAtivo) return servicosCadastrados;
+            return servicosCadastrados.filter(s => s.status === "Pendente" || s.status === "Negociação");
+        }
+
         function init() {
-            const q = query(collection(db, "servicos_terceirizados"), orderBy("dataCriacao", "desc"));
+            const q = query(collection(dbMecanica, "servicos_terceirizados"), orderBy("dataCriacao", "desc"));
             onSnapshot(q, (snapshot) => {
                 servicosCadastrados = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderizarLista();
@@ -119,46 +215,112 @@
 
         window.adicionarServico = async () => {
             const empresa = document.getElementById('inputEmpresa').value.trim();
+            const nimbi = document.getElementById('inputNimbi').value.trim();
+            const status = document.getElementById('inputStatus').value;
             const descricao = document.getElementById('inputDescricao').value.trim();
             const dataAgendada = document.getElementById('inputData').value;
             const valorInput = document.getElementById('inputValor').value;
+            const comentarioInicial = document.getElementById('inputComentarioInicial').value.trim();
 
             if (!empresa || !descricao || !dataAgendada || !valorInput) {
-                alert("Por favor, preencha todos os campos.");
+                alert("Por favor, preencha os campos obrigatórios.");
                 return;
             }
 
             const valorFormatado = parseFloat(valorInput.replace(/[R$\s.]/g, "").replace(",", "."));
-
-            const btn = document.querySelector('button[onclick="adicionarServico()"]');
-            btn.innerText = "SALVANDO...";
-            btn.disabled = true;
+            const comentariosArray = comentarioInicial ? [{ texto: comentarioInicial, data: new Date().toISOString() }] : [];
 
             try {
-                await addDoc(collection(db, "servicos_terceirizados"), {
-                    empresa: empresa,
-                    descricao: descricao,
+                await addDoc(collection(dbMecanica, "servicos_terceirizados"), {
+                    empresa,
+                    codigoNimbi: nimbi || "-",
+                    status,
+                    descricao,
                     dataRealizacao: dataAgendada,
                     valor: valorFormatado,
+                    comentarios: comentariosArray,
+                    origem: "Elétrica",
                     dataCriacao: new Date().toISOString()
                 });
 
                 document.getElementById('inputEmpresa').value = "";
+                document.getElementById('inputNimbi').value = "";
                 document.getElementById('inputDescricao').value = "";
                 document.getElementById('inputData').value = "";
                 document.getElementById('inputValor').value = "";
+                document.getElementById('inputComentarioInicial').value = "";
+                document.getElementById('inputStatus').value = "Negociação";
             } catch (error) {
                 console.error("Erro ao salvar serviço:", error);
                 alert("Erro ao salvar o serviço.");
-            } finally {
-                btn.innerText = "＋ Registrar Serviço";
-                btn.disabled = false;
+            }
+        };
+
+        window.abrirModalEdicao = (id) => {
+            const servico = servicosCadastrados.find(s => s.id === id);
+            if (!servico) return;
+            servicoAtualEditando = JSON.parse(JSON.stringify(servico));
+
+            document.getElementById('editId').value = servico.id;
+            document.getElementById('editNimbi').value = servico.codigoNimbi || "";
+            document.getElementById('editStatus').value = servico.status || "Negociação";
+            document.getElementById('editNovoComentario').value = "";
+
+            renderizarHistoricoModal();
+            document.getElementById('modalEdicao').classList.remove('hidden');
+        };
+
+        window.fecharModal = () => {
+            document.getElementById('modalEdicao').classList.add('hidden');
+            servicoAtualEditando = null;
+        };
+
+        window.adicionarComentarioModal = () => {
+            const txt = document.getElementById('editNovoComentario').value.trim();
+            if(!txt) return;
+            if(!servicoAtualEditando.comentarios) servicoAtualEditando.comentarios = [];
+            servicoAtualEditando.comentarios.push({ texto: txt, data: new Date().toISOString() });
+            document.getElementById('editNovoComentario').value = "";
+            renderizarHistoricoModal();
+        };
+
+        function renderizarHistoricoModal() {
+            const container = document.getElementById('editHistoricoComentarios');
+            const comps = servicoAtualEditando.comentarios || [];
+            if(comps.length === 0) {
+                container.innerHTML = `<span class="text-slate-400 italic">Nenhum comentário registrado.</span>`;
+                return;
+            }
+            container.innerHTML = comps.map(c => `
+                <div class="border-b border-slate-200 pb-1">
+                    <span class="text-[9px] font-bold text-blue-500">${new Date(c.data).toLocaleString('pt-BR')}</span>
+                    <p class="font-medium text-slate-700">${c.texto}</p>
+                </div>
+            `).join('');
+        }
+
+        window.salvarEdicaoModal = async () => {
+            const id = document.getElementById('editId').value;
+            const codigoNimbi = document.getElementById('editNimbi').value.trim();
+            const status = document.getElementById('editStatus').value;
+
+            try {
+                const docRef = doc(dbMecanica, "servicos_terceirizados", id);
+                await updateDoc(docRef, {
+                    codigoNimbi,
+                    status,
+                    comentarios: servicoAtualEditando.comentarios || []
+                });
+                fecharModal();
+            } catch(e) {
+                console.error("Erro ao atualizar:", e);
+                alert("Erro ao atualizar dados.");
             }
         };
 
         window.removerServico = async (id) => {
             if(confirm("Deseja realmente remover este serviço?")) {
-                await deleteDoc(doc(db, "servicos_terceirizados", id));
+                await deleteDoc(doc(dbMecanica, "servicos_terceirizados", id));
             }
         };
 
@@ -170,38 +332,85 @@
 
         function renderizarLista() {
             const ui = document.getElementById('listaServicosUI');
-            valorTotalServicos = 0;
+            const listaExibicao = obterServicosFiltrados();
+            let valorTotalFiltrado = 0;
 
-            if (servicosCadastrados.length === 0) {
-                ui.innerHTML = `<div class="py-24 text-center text-slate-300 font-bold text-[10px] uppercase tracking-widest">Nenhum Serviço Registrado</div>`;
+            if (listaExibicao.length === 0) {
+                ui.innerHTML = `<div class="py-24 text-center text-slate-300 font-bold text-[10px] uppercase tracking-widest">Nenhum Serviço Encontrado</div>`;
                 document.getElementById('totalServicos').innerText = "R$ 0,00";
                 return;
             }
 
-            ui.innerHTML = servicosCadastrados.map(s => {
-                valorTotalServicos += (s.valor || 0);
+            ui.innerHTML = listaExibicao.map(s => {
+                valorTotalFiltrado += (s.valor || 0);
                 
+                let badgeStatus = "";
+                if(s.status === "Negociação") badgeStatus = `<span class="bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">Negociação</span>`;
+                else if(s.status === "Pendente") badgeStatus = `<span class="bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">Pendente</span>`;
+                else badgeStatus = `<span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">Atendido</span>`;
+
+                const ultimoComentario = (s.comentarios && s.comentarios.length > 0) ? s.comentarios[s.comentarios.length - 1].texto : "Nenhum comentário";
+
                 return `
-                <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors border-b border-slate-50">
-                    <div class="flex-1 pr-4">
-                        <p class="text-sm font-bold text-slate-700 leading-tight">${s.empresa}</p>
-                        <p class="text-[11px] font-semibold text-slate-500 mt-1">${s.descricao}</p>
-                        <div class="flex flex-wrap gap-2 items-center mt-2">
-                            <span class="text-[9px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300">Data: ${formatarDataBR(s.dataRealizacao)}</span>
+                <li class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col gap-4">
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">NIMBI: <strong class="text-slate-600">${s.codigoNimbi || '-'}</strong></span>
+                                <span class="text-slate-300">•</span>
+                                ${badgeStatus}
+                            </div>
+                            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">${s.empresa}</h3>
+                            <p class="text-xs font-semibold text-slate-500">${s.descricao}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Valor</span>
+                            <span class="text-lg font-black text-blue-600 tracking-tight">R$ ${(s.valor || 0).toFixed(2).replace('.', ',')}</span>
                         </div>
                     </div>
-                    <div class="flex flex-col items-end gap-2 shrink-0">
-                        <span class="text-sm font-black text-slate-800 tracking-tighter">R$ ${(s.valor || 0).toFixed(2).replace('.', ',')}</span>
-                        <button onclick="removerServico('${s.id}')" class="px-2 py-1 bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-md font-bold text-[10px] uppercase transition-colors">Excluir</button>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
+                        <div><b>Data Realização:</b> ${formatarDataBR(s.dataRealizacao)}</div>
+                        <div class="truncate max-w-[250px]"><b>Último Comentário:</b> ${ultimoComentario}</div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-1 border-t border-slate-100">
+                        <button onclick="abrirModalEdicao('${s.id}')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-[10px] uppercase transition-colors">Editar / Comentar</button>
+                        <button onclick="removerServico('${s.id}')" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-[10px] uppercase transition-colors">Excluir</button>
                     </div>
                 </li>`;
             }).join('');
 
-            document.getElementById('totalServicos').innerText = `R$ ${valorTotalServicos.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`;
+            document.getElementById('totalServicos').innerText = `R$ ${valorTotalFiltrado.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`;
         }
 
+        window.exportarExcel = () => {
+            const listaExibicao = obterServicosFiltrados();
+            if (listaExibicao.length === 0) return alert("Não há serviços para exportar com o follow-up ativado.");
+            
+            const dadosPlanilha = listaExibicao.map(s => ({
+                "Data": formatarDataBR(s.dataRealizacao),
+                "Empresa": s.empresa,
+                "Código Nimbi": s.codigoNimbi || "-",
+                "Status": s.status || "Negociação",
+                "Descrição": s.descricao,
+                "Setor Origem": s.origem || "Geral",
+                "Valor (R$)": s.valor || 0,
+                "Último Comentário": (s.comentarios && s.comentarios.length > 0) ? s.comentarios[s.comentarios.length - 1].texto : ""
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(dadosPlanilha);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Serviços Terceirizados");
+            
+            const sufixo = filtroFollowUpAtivo ? "_FollowUp" : "";
+            const dataAtual = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            XLSX.writeFile(workbook, `Servicos_Terceirizados${sufixo}_${dataAtual}.xlsx`);
+        };
+
         window.exportarPDF = () => {
-            if (servicosCadastrados.length === 0) return alert("Não há serviços para gerar o relatório.");
+            const listaExibicao = obterServicosFiltrados();
+            if (listaExibicao.length === 0) return alert("Não há serviços para gerar o relatório com o follow-up ativado.");
 
             const btn = document.getElementById('btnGerarPDF');
             const textoOriginal = btn.innerText;
@@ -210,17 +419,18 @@
             const { jsPDF } = window.jspdf;
             const docPdf = new jsPDF();
 
+            const titulo = filtroFollowUpAtivo ? "Relatório de Serviços (Follow-up: Pendentes e Negociação)" : "Relatório de Serviços Terceirizados";
             docPdf.setFontSize(14);
-            docPdf.setTextColor(249, 115, 22);
-            docPdf.text(`Relatório de Serviços Terceirizados`, 14, 15);
+            docPdf.setTextColor(37, 99, 235);
+            docPdf.text(titulo, 14, 15);
             docPdf.setTextColor(0, 0, 0);
 
-            const colunas = ["Data", "Empresa", "Descrição", "Valor"];
-            
-            const linhas = servicosCadastrados.map(s => [
+            const colunas = ["Data", "Empresa", "Nimbi", "Status", "Valor"];
+            const linhas = listaExibicao.map(s => [
                 formatarDataBR(s.dataRealizacao),
                 s.empresa,
-                s.descricao,
+                s.codigoNimbi || "-",
+                s.status || "Negociação",
                 `R$ ${(s.valor || 0).toFixed(2).replace('.', ',')}`
             ]);
 
@@ -229,22 +439,22 @@
                 body: linhas,
                 startY: 25,
                 theme: 'striped',
-                headStyles: { fillColor: [249, 115, 22] },
+                headStyles: { fillColor: [59, 130, 246] },
                 styles: { fontSize: 9 },
                 margin: { bottom: 15 }
             });
 
+            let valorTotalFiltrado = listaExibicao.reduce((acc, s) => acc + (s.valor || 0), 0);
             let currentY = docPdf.lastAutoTable.finalY + 10;
-
             docPdf.setFillColor(241, 245, 249);
             docPdf.rect(14, currentY - 5, 180, 20, 'F');
             docPdf.setFontSize(11);
             docPdf.setFont(undefined, 'bold');
-            docPdf.text(`Total em Serviços: R$ ${valorTotalServicos.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`, 18, currentY + 3);
+            docPdf.text(`Total Filtrado: R$ ${valorTotalFiltrado.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`, 18, currentY + 3);
 
+            const sufixo = filtroFollowUpAtivo ? "_FollowUp" : "";
             const dataAtual = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-            docPdf.save(`Servicos_Terceirizados_${dataAtual}.pdf`);
-            
+            docPdf.save(`Servicos_Terceirizados${sufixo}_${dataAtual}.pdf`);
             btn.innerText = textoOriginal;
         };
 

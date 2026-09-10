@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ Mecânica App - Oficial</title>
+    <title>💧 Hidráulica App - Oficial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        :root { --primary: #f97316; --border: #e2e8f0; } /* Cor Laranja para Mecânica */
+        :root { --primary: #0ea5e9; --border: #e2e8f0; } /* Cor Ciano/Azul Água para Hidráulica */
         .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; box-sizing: border-box; z-index: 1000; }
         body { padding-top: 85px; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
@@ -22,20 +22,20 @@
 </head>
 <body class="bg-slate-50 min-h-screen px-4 pb-12">
     <nav class="navbar shadow-sm">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>⚙️</span> MECÂNICA APP</div>
-        <a href="../principal.html" class="text-slate-500 hover:text-orange-500 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>💧</span> HIDRÁULICA APP</div>
+        <a href="../principal.html" class="text-slate-500 hover:text-sky-500 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
     </nav>
 
     <div class="max-w-6xl mx-auto">
         <div class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
             <div>
-                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-orange-500 uppercase">Orçamentos Mensais</h1>
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-sky-500 uppercase">Lista de Compras - Hidráulica</h1>
                 <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Sincronização Automática para Compras</p>
             </div>
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex flex-col">
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Meta deste Mês</label>
-                    <input type="text" id="limiteOrcamento" disabled oninput="aplicarMascara(this)" class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-orange-400 w-48 text-right disabled:opacity-50 disabled:cursor-not-allowed">
+                    <input type="text" id="limiteOrcamento" disabled oninput="aplicarMascara(this)" class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 w-48 text-right disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
                 <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
                     <select id="selectMes" onchange="trocarPeriodo()" class="bg-transparent px-2 font-bold text-slate-700 outline-none">
@@ -50,8 +50,8 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
-                <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Pesquisar Produto</h2>
-                <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)" placeholder="Digite nome ou código..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 mb-4 transition-all">
+                <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Pesquisar Material</h2>
+                <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)" placeholder="Digite nome ou código..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-400 mb-4 transition-all">
                 <div id="listaSugestoes" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scroll"></div>
             </div>
 
@@ -155,7 +155,7 @@
 
         async function salvarMetaNoBanco() {
             if (!isUserAdmin) return; 
-            await setDoc(doc(db, "listas_mensais", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
+            await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
         }
 
         window.trocarPeriodo = () => {
@@ -163,10 +163,10 @@
             const ano = document.getElementById('selectAno').value;
             periodoId = `${mes}-${ano}`;
             const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
-            document.getElementById('labelPeriodo').innerText = `Orçamento: ${mesNome} / ${ano}`;
+            document.getElementById('labelPeriodo').innerText = `Orçamento Hidráulica: ${mesNome} / ${ano}`;
             editandoId = null;
 
-            onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
+            onSnapshot(doc(db, "listas_mensais_hidraulica", periodoId), (docSnap) => {
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
                     carrinhoAtual = dados.itens || [];
@@ -190,20 +190,20 @@
             lista.innerHTML = filtrados.map(p => {
                 const jaEstaNoCarrinho = carrinhoAtual.some(item => item.id === p.id);
                 return `
-                <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-orange-200">
+                <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-sky-200">
                     <p class="font-bold text-slate-800 text-sm leading-tight">${p.nome}</p>
                     <p class="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-tighter">Cód: ${p.codigo} | Unit: R$ ${p.valor}</p>
                     
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1">
-                        <input type="date" id="dataDesejada-${p.id}" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400" title="Data Desejada">
-                        <input type="text" id="local-${p.id}" placeholder="Local (ex: Setor A)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                        <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                        <input type="text" id="movimentacao-${p.id}" placeholder="Cód. Mov." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                        <input type="date" id="dataDesejada-${p.id}" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400" title="Data Desejada">
+                        <input type="text" id="local-${p.id}" placeholder="Local (ex: Tubulação A)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                        <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                        <input type="text" id="movimentacao-${p.id}" placeholder="Cód. Mov." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
                     </div>
 
                     <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
                         <input type="number" id="qtd-${p.id}" value="1" min="1" class="w-16 p-2 bg-slate-100 border rounded-lg text-sm font-bold text-center outline-none">
-                        <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md ${jaEstaNoCarrinho ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100'}">${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}</button>
+                        <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md ${jaEstaNoCarrinho ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-sky-500 text-white hover:bg-sky-600 shadow-sky-100'}">${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}</button>
                     </div>
                 </div>`;
             }).join('');
@@ -221,9 +221,9 @@
             
             if (!carrinhoAtual.some(i => i.id === id)) {
                 const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd, dataDesejada: dataDes, local: localUso, codigoNimbi: codNimbi, codigoMovimentacao: codMov }];
-                await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+                await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
 
-                await addDoc(collection(db, "compras"), {
+                await addDoc(collection(db, "compras_hidraulica"), {
                     nome: prod.nome,
                     codigo: prod.codigo || "S/C",
                     codigoNimbi: codNimbi,
@@ -243,7 +243,7 @@
 
         window.remover = async (id) => {
             const novaLista = carrinhoAtual.filter(i => i.id !== id);
-            await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+            await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
         };
 
         window.editar = (id) => {
@@ -274,7 +274,7 @@
                 editandoId = null;
                 renderizarCarrinho();
 
-                await setDoc(doc(db, "listas_mensais", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
+                await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
             }
         };
 
@@ -288,25 +288,7 @@
             const mesRef = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             const anoRef = document.getElementById('selectAno').value;
 
-            let itensParaRelatorio = carrinhoAtual.map(i => ({...i, origem: "Mecânica"}));
-            let metaEletrica = 0;
-
-            if (isUserAdmin) {
-                try {
-                    const docRef = doc(dbEletrica, "listas_mensais", periodoId);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const dadosEle = docSnap.data();
-                        const itensEle = dadosEle.itens || [];
-                        metaEletrica = dadosEle.meta || 0;
-                        
-                        itensEle.forEach(i => i.origem = "Elétrica");
-                        itensParaRelatorio = [...itensParaRelatorio, ...itensEle];
-                    }
-                } catch (erro) {
-                    console.error("Erro ao buscar dados da Elétrica para o PDF:", erro);
-                }
-            }
+            let itensParaRelatorio = carrinhoAtual.map(i => ({...i, origem: "Hidráulica"}));
 
             const gruposNimbi = {};
             const totaisMovimentacao = {}; 
@@ -330,16 +312,9 @@
             });
 
             docPdf.setFontSize(14);
-            docPdf.text(`Relatório de Compras: ${mesRef} / ${anoRef}`, 14, 15);
+            docPdf.text(`Relatório de Compras (Hidráulica): ${mesRef} / ${anoRef}`, 14, 15);
             
-            if(isUserAdmin) {
-                docPdf.setFontSize(9);
-                docPdf.setTextColor(100, 100, 100);
-                docPdf.text(`(Contempla dados unificados de Mecânica e Elétrica)`, 14, 20);
-                docPdf.setTextColor(0, 0, 0);
-            }
-
-            let currentY = isUserAdmin ? 25 : 22;
+            let currentY = 22;
             let gastoTotalSomado = 0;
 
             const chavesOrdenadas = Object.keys(gruposNimbi).sort();
@@ -354,19 +329,18 @@
 
                 docPdf.setFontSize(11);
                 docPdf.setFont(undefined, 'bold');
-                docPdf.setTextColor(249, 115, 22); 
+                docPdf.setTextColor(14, 165, 233); 
                 docPdf.text(`Cód Nimbi: ${nimbi}`, 14, currentY);
                 docPdf.setTextColor(0, 0, 0); 
                 currentY += 5;
 
-                const colunas = ["Cód", "Mov", "Produto", "Local", "Qtd", "Unit", "Total"];
-                if (isUserAdmin) colunas.push("Origem");
+                const colunas = ["Cód", "Mov", "Material", "Local", "Qtd", "Unit", "Total"];
 
                 const linhas = grupo.itens.map(item => {
                     const vUnit = parseFloat(String(item.valor).replace(',', '.')) || 0;
                     const totalLinha = vUnit * item.quantidade;
                     
-                    const row = [
+                    return [
                         item.codigo || "-", 
                         item.codigoMovimentacao || "-", 
                         item.nome, 
@@ -375,9 +349,6 @@
                         `R$ ${vUnit.toFixed(2).replace('.', ',')}`, 
                         `R$ ${totalLinha.toFixed(2).replace('.', ',')}`
                     ];
-                    
-                    if (isUserAdmin) row.push(item.origem);
-                    return row;
                 });
 
                 docPdf.autoTable({ 
@@ -385,7 +356,7 @@
                     body: linhas, 
                     startY: currentY,
                     theme: 'striped',
-                    headStyles: { fillColor: [249, 115, 22] }, 
+                    headStyles: { fillColor: [14, 165, 233] }, 
                     styles: { fontSize: 8 },
                     margin: { bottom: 15 } 
                 });
@@ -402,7 +373,7 @@
 
             const chavesMov = Object.keys(totaisMovimentacao).sort();
             
-            let alturaResumoBase = isUserAdmin ? 35 : 20; 
+            let alturaResumoBase = 20; 
             let alturaSessaoMovimentos = 15 + (chavesMov.length * 5); 
             let alturaTotalBox = alturaResumoBase + alturaSessaoMovimentos;
 
@@ -416,23 +387,14 @@
             
             docPdf.setFontSize(11);
             docPdf.setFont(undefined, 'bold');
-            docPdf.text(`RESUMO GERAL DO MÊS`, 18, currentY + 2);
+            docPdf.text(`RESUMO GERAL DO MÊS (HIDRÁULICA)`, 18, currentY + 2);
             currentY += 10;
             
             docPdf.setFontSize(10);
             docPdf.setFont(undefined, 'normal');
             docPdf.text(`Total de Compras Solicitadas: R$ ${gastoTotalSomado.toFixed(2).replace('.', ',')}`, 18, currentY);
             currentY += 5;
-            docPdf.text(`Meta (Mecânica): R$ ${valorLimiteDesteMes.toFixed(2).replace('.', ',')}`, 18, currentY);
-            
-            if (isUserAdmin) {
-                currentY += 5;
-                docPdf.text(`Meta (Elétrica): R$ ${metaEletrica.toFixed(2).replace('.', ',')}`, 18, currentY);
-                currentY += 5;
-                const metaUnificada = valorLimiteDesteMes + metaEletrica;
-                docPdf.setFont(undefined, 'bold');
-                docPdf.text(`Meta Total Unificada: R$ ${metaUnificada.toFixed(2).replace('.', ',')}`, 18, currentY);
-            }
+            docPdf.text(`Meta (Hidráulica): R$ ${valorLimiteDesteMes.toFixed(2).replace('.', ',')}`, 18, currentY);
 
             currentY += 10;
             docPdf.setFontSize(10);
@@ -449,8 +411,7 @@
                 currentY += 5;
             });
 
-            docPdf.save(`Orcamento_Mecanica_${mesRef}_${anoRef}.pdf`);
-            
+            docPdf.save(`Orcamento_Hidraulica_${mesRef}_${anoRef}.pdf`);
             btn.innerText = textoOriginal;
         };
 
@@ -467,7 +428,7 @@
                     "Cód. Nimbi": item.codigoNimbi || "",
                     "Cód. Mov.": item.codigoMovimentacao || "",
                     "Data Desejada": item.dataDesejada || "",
-                    "Descrição do Produto": item.nome,
+                    "Descrição do Material": item.nome,
                     "Local de Aplicação": item.local || "Geral",
                     "Qtd": item.quantidade,
                     "Valor Unitário": vUnit,
@@ -482,8 +443,8 @@
                 { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }
             ];
 
-            XLSX.utils.book_append_sheet(wb, ws, "Orcamento");
-            XLSX.writeFile(wb, `Orcamento_Mecanica_${mesRef}_${anoRef}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Orcamento_Hidraulica");
+            XLSX.writeFile(wb, `Orcamento_Hidraulica_${mesRef}_${anoRef}.xlsx`);
         };
 
         function renderizarCarrinho() {
@@ -501,25 +462,25 @@
                 
                 if (editandoId === p.id) {
                     return `
-                    <li class="p-4 bg-orange-50 border-b border-orange-100 flex flex-col gap-2">
-                        <p class="text-sm font-bold text-orange-800 leading-tight">Editando: ${p.nome}</p>
+                    <li class="p-4 bg-sky-50 border-b border-sky-100 flex flex-col gap-2">
+                        <p class="text-sm font-bold text-sky-800 leading-tight">Editando: ${p.nome}</p>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-1">
-                            <input type="date" id="edit-dataDes-${p.id}" value="${p.dataDesejada || ''}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400" title="Data Desejada">
-                            <input type="text" id="edit-local-${p.id}" value="${p.local || ''}" placeholder="Local" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="text" id="edit-nimbi-${p.id}" value="${p.codigoNimbi || ''}" placeholder="Cód. Nimbi" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="text" id="edit-mov-${p.id}" value="${p.codigoMovimentacao || ''}" placeholder="Cód. Mov." class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="number" id="edit-qtd-${p.id}" value="${p.quantidade}" min="1" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-center outline-none focus:ring-1 focus:ring-orange-400">
+                            <input type="date" id="edit-dataDes-${p.id}" value="${p.dataDesejada || ''}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400" title="Data Desejada">
+                            <input type="text" id="edit-local-${p.id}" value="${p.local || ''}" placeholder="Local" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                            <input type="text" id="edit-nimbi-${p.id}" value="${p.codigoNimbi || ''}" placeholder="Cód. Nimbi" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                            <input type="text" id="edit-mov-${p.id}" value="${p.codigoMovimentacao || ''}" placeholder="Cód. Mov." class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                            <input type="number" id="edit-qtd-${p.id}" value="${p.quantidade}" min="1" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-center outline-none focus:ring-1 focus:ring-sky-400">
                         </div>
                         <div class="flex justify-end gap-2 mt-2">
                             <button onclick="cancelarEdicao()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold rounded-lg uppercase transition-colors">Cancelar</button>
-                            <button onclick="salvarEdicao('${p.id}')" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold rounded-lg uppercase shadow-sm transition-colors">Salvar Alterações</button>
+                            <button onclick="salvarEdicao('${p.id}')" class="px-4 py-1.5 bg-sky-500 hover:bg-sky-600 text-white text-[10px] font-bold rounded-lg uppercase shadow-sm transition-colors">Salvar Alterações</button>
                         </div>
                     </li>`;
                 }
 
                 const nimbiHtml = p.codigoNimbi ? `<span class="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold uppercase border border-purple-100">Nimbi: ${p.codigoNimbi}</span>` : '';
                 const movHtml = p.codigoMovimentacao ? `<span class="text-[9px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold uppercase border border-amber-100">Mov: ${p.codigoMovimentacao}</span>` : '';
-                const dataDesHtml = p.dataDesejada ? `<span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100">Para: ${p.dataDesejada.split('-').reverse().join('/')}</span>` : '';
+                const dataDesHtml = p.dataDesejada ? `<span class="text-[9px] bg-sky-50 text-sky-600 px-1.5 py-0.5 rounded font-bold uppercase border border-sky-100">Para: ${p.dataDesejada.split('-').reverse().join('/')}</span>` : '';
 
                 return `
                 <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors border-b border-slate-50">
@@ -528,7 +489,7 @@
                         <div class="flex flex-wrap gap-2 items-center mt-1">
                             <span class="text-[9px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300">Cód: ${p.codigo || 'S/C'}</span>
                             <p class="text-[10px] text-slate-400 font-black uppercase tracking-tight">${p.quantidade} un x R$ ${p.valor}</p>
-                            <span class="text-[9px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase border border-orange-100">${p.local || 'Geral'}</span>
+                            <span class="text-[9px] bg-sky-50 text-sky-600 px-1.5 py-0.5 rounded font-bold uppercase border border-sky-100">${p.local || 'Geral'}</span>
                             ${dataDesHtml}
                             ${nimbiHtml}
                             ${movHtml}
@@ -537,7 +498,7 @@
                     <div class="flex items-center gap-4 shrink-0">
                         <span class="text-sm font-black text-slate-800 tracking-tighter">R$ ${totalLinha.toFixed(2).replace('.', ',')}</span>
                         <div class="flex gap-1 bg-slate-100 rounded-lg p-1">
-                            <button onclick="editar('${p.id}')" class="p-1.5 text-orange-500 hover:bg-orange-200 hover:text-orange-700 rounded-md font-bold text-xs transition-colors" title="Editar">✏️</button>
+                            <button onclick="editar('${p.id}')" class="p-1.5 text-sky-500 hover:bg-sky-200 hover:text-sky-700 rounded-md font-bold text-xs transition-colors" title="Editar">✏️</button>
                             <button onclick="remover('${p.id}')" class="p-1.5 text-red-400 hover:bg-red-200 hover:text-red-600 rounded-md font-bold text-xs transition-colors" title="Remover">✕</button>
                         </div>
                     </div>

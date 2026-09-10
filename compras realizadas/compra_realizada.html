@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ Compras Realizadas - MECÂNICA App</title>
+    <title>⚙️ Compras Realizadas - Mecânica App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Bibliotecas para gerar PDF -->
@@ -11,33 +11,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; }
+        :root { --primary: #f97316; --bg: #f8fafc; } /* Cor Laranja - Mecânica */
         body { font-family: 'Inter', sans-serif; background: var(--bg); }
         
         /* Cores de Status */
         .status-solicitacao { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
         .status-liberado { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-        .status-pedido { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .status-pedido { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; } /* Laranja claro para pedido */
         .status-cancelado { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
         .status-atendido { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         .status-parcial { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
 
         .navbar { position: fixed; top: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-sizing: border-box; }
         .compra-card { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; transition: all 0.2s; }
-        .compra-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
+        .compra-card:hover { border-color: #f97316; transform: translateY(-2px); }
         .obs-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; }
-        .obs-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .obs-input:focus { border-color: #f97316; background: #fff; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
         
         /* Estilo para os inputs de filtro */
         .filter-control { background: white; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; }
-        .filter-control:focus { border-color: #2563eb; right: 2px ring #dbeafe; }
+        .filter-control:focus { border-color: #f97316; right: 2px ring #ffedd5; }
     </style>
 </head>
 <body class="pt-24 pb-12 px-4">
 
     <nav class="navbar shadow-sm">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: #2563eb; font-size: 1.25rem;">⚙️ MECÂNICA APP</div>
-        <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-bold text-sm tracking-tight uppercase">Voltar ao Início</a>
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">⚙️ MECÂNICA APP</div>
+        <a href="../principal.html" class="text-slate-500 hover:text-orange-500 font-bold text-sm tracking-tight uppercase transition-colors">Voltar ao Início</a>
     </nav>
 
     <div class="max-w-6xl mx-auto">
@@ -52,7 +52,7 @@
                 
                 <!-- BOTÕES -->
                 <div class="flex gap-2">
-                    <button id="btnPendencias" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
+                    <button id="btnPendencias" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
                         🚚 Follow-up
                     </button>
                     <button onclick="window.gerarPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
@@ -62,12 +62,12 @@
 
                 <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
 
-                <!-- FILTRO DE DATA PREVISÃO -->
+                <!-- FILTRO DE DATA DESEJADA -->
                 <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-tight">Previsão:</span>
-                    <input type="date" id="filtroDataInicio" class="text-sm border-none outline-none bg-transparent text-slate-700 cursor-pointer">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-tight">Desejada:</span>
+                    <input type="date" id="filtroDataInicio" class="text-sm border-none outline-none bg-transparent text-slate-700 cursor-pointer focus:text-orange-600 transition-colors">
                     <span class="text-xs font-bold text-slate-400">até</span>
-                    <input type="date" id="filtroDataFim" class="text-sm border-none outline-none bg-transparent text-slate-700 cursor-pointer">
+                    <input type="date" id="filtroDataFim" class="text-sm border-none outline-none bg-transparent text-slate-700 cursor-pointer focus:text-orange-600 transition-colors">
                 </div>
 
                 <!-- BUSCA E STATUS -->
@@ -137,14 +137,14 @@
                     status === statusFiltro ||
                     (statusFiltro === "pendentes" && (status === "pedido" || status === "parcial"));
 
-                // Filtro de Data de Previsão
+                // Filtro de Data Desejada
                 let matchesData = true;
                 if (dInicio || dFim) {
-                    if (!item.dataPrevisao) {
+                    if (!item.dataDesejada) {
                         matchesData = false; // Ignorar quem não tem data se o filtro estiver ativo
                     } else {
-                        if (dInicio && item.dataPrevisao < dInicio) matchesData = false;
-                        if (dFim && item.dataPrevisao > dFim) matchesData = false;
+                        if (dInicio && item.dataDesejada < dInicio) matchesData = false;
+                        if (dFim && item.dataDesejada > dFim) matchesData = false;
                     }
                 }
 
@@ -195,10 +195,10 @@
                                 Cód: ${item.codigo || 'S/C'} ${nimbiDisplay}
                             </div>
                             <h3 class="text-lg font-bold text-slate-800 leading-tight">${item.nome}</h3>
-                            <div class="text-[11px] font-bold text-blue-500 uppercase mt-1">${item.local || 'Geral'}</div>
+                            <div class="text-[11px] font-bold text-orange-500 uppercase mt-1">${item.local || 'Geral'}</div>
                         </div>
                         
-                        <!-- GRID ATUALIZADO: Com campo Data de Previsão -->
+                        <!-- GRID ATUALIZADO: Apenas Data Desejada (4 Colunas) -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center items-center">
                             <div>
                                 <div class="text-[9px] font-black text-slate-300 uppercase">Qtd</div>
@@ -209,12 +209,12 @@
                                 <div class="font-bold text-green-600">R$ ${parseFloat(item.valorTotal || 0).toFixed(2)}</div>
                             </div>
                             
-                            <!-- NOVO CAMPO: Data Prevista -->
+                            <!-- CAMPO ÚNICO: Data Desejada -->
                             <div class="bg-slate-50 p-1.5 rounded border border-slate-100">
-                                <div class="text-[9px] font-black text-blue-400 uppercase">Previsão</div>
-                                <input type="date" value="${item.dataPrevisao || ''}" 
-                                    onchange="window.atualizarDataPrevisao('${item.id}', this.value)" 
-                                    class="text-[11px] font-bold text-slate-700 bg-transparent outline-none w-full text-center cursor-pointer hover:text-blue-600 transition-colors">
+                                <div class="text-[9px] font-black text-orange-500 uppercase">Desejada</div>
+                                <input type="date" value="${item.dataDesejada || ''}" 
+                                    onchange="window.atualizarDataDesejada('${item.id}', this.value)" 
+                                    class="text-[11px] font-bold text-slate-700 bg-transparent outline-none w-full text-center cursor-pointer hover:text-orange-500 transition-colors">
                             </div>
 
                             <div class="col-span-2 sm:col-span-1">
@@ -262,9 +262,9 @@
             let textoData = "";
             if (dInicio || dFim) {
                 const formataBr = dataIso => dataIso.split('-').reverse().join('/');
-                if (dInicio && dFim) textoData = ` | Período Previsto: ${formataBr(dInicio)} a ${formataBr(dFim)}`;
-                else if (dInicio) textoData = ` | Período Previsto: A partir de ${formataBr(dInicio)}`;
-                else if (dFim) textoData = ` | Período Previsto: Até ${formataBr(dFim)}`;
+                if (dInicio && dFim) textoData = ` | Período Desejado: ${formataBr(dInicio)} a ${formataBr(dFim)}`;
+                else if (dInicio) textoData = ` | Período Desejado: A partir de ${formataBr(dInicio)}`;
+                else if (dFim) textoData = ` | Período Desejado: Até ${formataBr(dFim)}`;
             }
 
             doc.setFontSize(14);
@@ -273,8 +273,8 @@
             doc.setFontSize(9);
             doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
 
-            // Coluna de Previsão adicionada na tabela do PDF
-            const colunas = [["Cód / Nimbi", "Material", "Local", "Status", "Previsão", "Qtd Total", "Chegou", "Falta", "Valor (R$)"]];
+            // Removida "Previsão" - Apenas "Desejada" mantida
+            const colunas = [["Cód / Nimbi", "Material", "Local", "Status", "Desejada", "Qtd Total", "Chegou", "Falta", "Valor (R$)"]];
             
             const linhas = registrosFiltrados.map(item => {
                 const cod = item.codigo || 'S/C';
@@ -292,8 +292,8 @@
 
                 const statusFormatado = item.status.charAt(0).toUpperCase() + item.status.slice(1);
                 
-                const dataPrevFormatada = item.dataPrevisao 
-                    ? item.dataPrevisao.split('-').reverse().join('/') 
+                const dataDesFormatada = item.dataDesejada
+                    ? item.dataDesejada.split('-').reverse().join('/') 
                     : '-';
 
                 return [
@@ -301,7 +301,7 @@
                     item.nome,
                     item.local || 'Geral',
                     statusFormatado,
-                    dataPrevFormatada,
+                    dataDesFormatada,
                     item.quantidade || '0',
                     chegou,
                     falta,
@@ -314,10 +314,10 @@
                 body: linhas,
                 startY: 28,
                 styles: { fontSize: 8.5, cellPadding: 3 },
-                headStyles: { fillColor: [37, 99, 235] },
+                headStyles: { fillColor: [249, 115, 22] }, // Cor Laranja Mecânica
                 alternateRowStyles: { fillColor: [248, 250, 252] },
                 columnStyles: {
-                    4: { halign: 'center', fontStyle: 'bold' }, // Previsão
+                    4: { halign: 'center', fontStyle: 'bold' }, // Desejada
                     5: { halign: 'center' }, // Qtd Total
                     6: { halign: 'center' }, // Chegou
                     7: { halign: 'center', textColor: [220, 38, 38] }, // Falta
@@ -345,10 +345,10 @@
             renderizarLista();
         });
 
-        // NOVA FUNÇÃO GLOBAL para salvar data de previsão
-        window.atualizarDataPrevisao = async (id, dataISO) => {
-            try { await updateDoc(doc(db, "compras", id), { dataPrevisao: dataISO }); } 
-            catch (e) { console.error("Erro ao atualizar previsão:", e); }
+        // NOVA FUNÇÃO GLOBAL para salvar data Desejada
+        window.atualizarDataDesejada = async (id, dataISO) => {
+            try { await updateDoc(doc(db, "compras", id), { dataDesejada: dataISO }); } 
+            catch (e) { console.error("Erro ao atualizar data desejada:", e); }
         };
 
         window.atualizarStatus = async (id, novoStatus) => {

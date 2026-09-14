@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
         :root {
             --primary: #2563eb;
         }
+
         .navbar {
             position: fixed;
             top: 0;
@@ -26,16 +28,31 @@
             box-sizing: border-box;
             z-index: 1000;
         }
+
         body {
             padding-top: 85px;
             background: #f1f5f9;
         }
-        .positivo { color: #10b981 !important; }
-        .negativo { color: #ef4444 !important; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .positivo {
+            color: #10b981 !important;
+        }
+
+        .negativo {
+            color: #ef4444 !important;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
     </style>
 </head>
+
 <body>
 
     <nav class="navbar shadow-sm">
@@ -43,22 +60,27 @@
             <span>🏭</span> SUPERVISÃO ABATEDOURO — CONSOLIDADO
         </div>
         <div class="flex items-center gap-4">
-            <a href="../principal.html" class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors">Voltar ao Início</a>
+            <a href="../principal.html"
+                class="text-slate-500 hover:text-blue-600 font-semibold text-sm transition-colors">Voltar ao Início</a>
         </div>
     </nav>
 
     <div class="max-w-7xl mx-auto px-4 pb-12">
         
         <!-- PAINEL DE CONTROLE E SELEÇÃO MENSAL -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div
+            class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Dashboard Consolidado (Elétrica & Mecânica)</h1>
-                <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Gestão de Metas e Gastos por Categoria (Elétrica, Civil, Ferramentas, Hidráulica, Mecânica)</p>
+                <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Dashboard Consolidado (Elétrica &
+                    Mecânica)</h1>
+                <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">Gestão de Metas e Gastos por Categoria
+                    (Elétrica, Civil, Ferramentas, Hidráulica, Mecânica)</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
                 <div class="flex gap-2 bg-slate-100 p-2 rounded-xl border">
-                    <select id="selectMes" onchange="carregarDadosConsolidados()" class="bg-transparent font-bold text-slate-700 outline-none text-sm">
+                    <select id="selectMes" onchange="carregarDadosConsolidados()"
+                        class="bg-transparent font-bold text-slate-700 outline-none text-sm">
                         <option value="01">Janeiro</option>
                         <option value="02">Fevereiro</option>
                         <option value="03">Março</option>
@@ -72,7 +94,8 @@
                         <option value="11">Novembro</option>
                         <option value="12">Dezembro</option>
                     </select>
-                    <select id="selectAno" onchange="carregarDadosConsolidados(); carregarResumoAnualTela();" class="bg-transparent font-bold text-slate-700 outline-none text-sm">
+                    <select id="selectAno" onchange="carregarDadosConsolidados(); carregarResumoAnualTela();"
+                        class="bg-transparent font-bold text-slate-700 outline-none text-sm">
                         <option value="2025">2025</option>
                         <option value="2026">2026</option>
                     </select>
@@ -84,21 +107,28 @@
         <div class="bg-slate-800 p-6 rounded-2xl shadow-md mb-6 border border-slate-700 text-white">
             <div class="flex items-center gap-2 mb-4">
                 <span class="text-yellow-400">📄</span>
-                <h2 class="text-sm font-black uppercase tracking-widest text-slate-100">Painel de Exportação de Relatórios PDF</h2>
+                <h2 class="text-sm font-black uppercase tracking-widest text-slate-100">Painel de Exportação de
+                    Relatórios PDF</h2>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Data Início</label>
-                    <input type="date" id="dataInicioPdf" class="w-full bg-slate-700 text-white text-sm font-bold p-2 rounded-xl outline-none border border-slate-600">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Data
+                        Início</label>
+                    <input type="date" id="dataInicioPdf"
+                        class="w-full bg-slate-700 text-white text-sm font-bold p-2 rounded-xl outline-none border border-slate-600">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Data Fim</label>
-                    <input type="date" id="dataFimPdf" class="w-full bg-slate-700 text-white text-sm font-bold p-2 rounded-xl outline-none border border-slate-600">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Data
+                        Fim</label>
+                    <input type="date" id="dataFimPdf"
+                        class="w-full bg-slate-700 text-white text-sm font-bold p-2 rounded-xl outline-none border border-slate-600">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Setor / Categoria</label>
-                    <select id="filtroSetorPdf" class="w-full bg-slate-700 text-white text-sm font-bold p-2.5 rounded-xl outline-none border border-slate-600">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Setor /
+                        Categoria</label>
+                    <select id="filtroSetorPdf"
+                        class="w-full bg-slate-700 text-white text-sm font-bold p-2.5 rounded-xl outline-none border border-slate-600">
                         <option value="TODOS">Todos os Setores</option>
                         <option value="Eletrica">Elétrica</option>
                         <option value="Civil">Civil</option>
@@ -108,10 +138,12 @@
                     </select>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <button onclick="exportarPdfPorPeriodoESetor()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all uppercase tracking-widest">
+                    <button onclick="exportarPdfPorPeriodoESetor()"
+                        class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all uppercase tracking-widest">
                         PDF Período / Setor
                     </button>
-                    <button onclick="exportarPdfAnualConsolidado()" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all uppercase tracking-widest">
+                    <button onclick="exportarPdfAnualConsolidado()"
+                        class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all uppercase tracking-widest">
                         PDF Resumo Anual Geral
                     </button>
                 </div>
@@ -121,22 +153,26 @@
         <!-- CARDS GERAIS DO MÊS -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Meta Orçamentária Total (Mês)</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Meta Orçamentária Total
+                    (Mês)</p>
                 <p id="cardMetaTotal" class="text-2xl font-black text-slate-800 tracking-tighter">R$ 0,00</p>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Gasto Real Consolidado (Mês)</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Gasto Real Consolidado
+                    (Mês)</p>
                 <p id="cardGastoTotal" class="text-2xl font-black text-slate-800 tracking-tighter">R$ 0,00</p>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Saldo Total Disponível (Mês)</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Saldo Total Disponível
+                    (Mês)</p>
                 <p id="cardSaldoTotal" class="text-2xl font-black tracking-tighter">R$ 0,00</p>
             </div>
         </div>
 
         <!-- SEÇÃO DE ORÇAMENTOS POR CATEGORIA (GRID DE CARDS) -->
         <div class="mb-8">
-            <h2 class="text-sm font-black uppercase tracking-widest text-slate-600 mb-4">Orçamento Separado por Categoria (Mês Atual)</h2>
+            <h2 class="text-sm font-black uppercase tracking-widest text-slate-600 mb-4">Orçamento Separado por
+                Categoria (Mês Atual)</h2>
             <div id="gridCategorias" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Preenchido dinamicamente via JS -->
             </div>
@@ -144,7 +180,8 @@
 
         <!-- NOVA SEÇÃO: VISUALIZAÇÃO ANUAL NA TELA -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
-            <div class="bg-slate-800 p-4 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex justify-between items-center">
+            <div
+                class="bg-slate-800 p-4 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex justify-between items-center">
                 <span>Resumo Anual Consolidado (Todos os Setores)</span>
                 <span id="anoResumoTexto" class="bg-slate-700 px-3 py-1 rounded-lg">---</span>
             </div>
@@ -165,7 +202,8 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider border-b border-slate-200">
+                        <tr
+                            class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider border-b border-slate-200">
                             <th class="p-4">Mês</th>
                             <th class="p-4 text-right">Meta Total</th>
                             <th class="p-4 text-right">Gasto Total</th>
@@ -181,13 +219,15 @@
 
         <!-- LISTA CONSOLIDADA DE ITENS DO MÊS -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
-            <div class="bg-slate-800 p-4 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex justify-between items-center">
+            <div
+                class="bg-slate-800 p-4 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex justify-between items-center">
                 <span>Itens Comprados no Mês (Elétrica & Mecânica)</span>
                 <span id="periodoTexto" class="bg-slate-700 px-3 py-1 rounded-lg">---</span>
             </div>
             <div class="p-4 border-b border-slate-100 flex gap-4 items-center bg-slate-50">
                 <span class="text-xs font-bold text-slate-500 uppercase">Filtrar por Categoria:</span>
-                <select id="filtroCategoriaTabela" onchange="renderizarTabelaItens()" class="bg-white text-slate-700 text-xs font-bold p-2 rounded-xl border border-slate-200 outline-none">
+                <select id="filtroCategoriaTabela" onchange="renderizarTabelaItens()"
+                    class="bg-white text-slate-700 text-xs font-bold p-2 rounded-xl border border-slate-200 outline-none">
                     <option value="TODAS">Todas as Categorias</option>
                     <option value="Eletrica">Elétrica</option>
                     <option value="Civil">Civil</option>
@@ -199,7 +239,8 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider border-b border-slate-200">
+                        <tr
+                            class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider border-b border-slate-200">
                             <th class="p-4">Origem / Banco</th>
                             <th class="p-4">Categoria</th>
                             <th class="p-4">Descrição do Item</th>
@@ -254,7 +295,8 @@
             "36/42": "Mecanica",
             "43": "Civil",
             "36/43": "Civil",
-            "309": "Ferramentas"
+            "309": "Ferramentas",
+            "36/860": "Ferramentas"
         };
 
         let itensConsolidadosGlobais = [];
@@ -289,45 +331,36 @@
             itensConsolidadosGlobais = [];
             metasCategoriasGlobais = { Eletrica: 0, Civil: 0, Ferramentas: 0, Hidraulica: 0, Mecanica: 0 };
 
+            // Mapeamento completo de todas as coleções de Elétrica, Mecânica, Civil, Hidráulica, Sala de Máquinas e Ferramentas
+            const colecoesParaBuscar = [
+                { db: dbElec, col: "listas_mensais", catPadrao: "Eletrica", origem: "Elétrica" },
+                { db: dbMec, col: "listas_mensais", catPadrao: "Mecanica", origem: "Mecânica" },
+                { db: dbElec, col: "listas_mensais_civil", catPadrao: "Civil", origem: "Civil" },
+                { db: dbElec, col: "listas_mensais_ferramentas", catPadrao: "Ferramentas", origem: "Ferramentas" },
+                { db: dbMec, col: "listas_mensais_ferramentas", catPadrao: "Ferramentas", origem: "Ferramentas (Mecânica)" },
+                { db: dbElec, col: "listas_mensais_hidraulica", catPadrao: "Hidraulica", origem: "Hidráulica" },
+                { db: dbElec, col: "listas_mensais_sala_maquinas", catPadrao: "Ferramentas", origem: "Sala de Máquinas" }
+            ];
+
             try {
-                const docMecRef = doc(dbMec, "listas_mensais", periodoId);
-                const snapMec = await getDoc(docMecRef);
-                if (snapMec.exists()) {
-                    const dados = snapMec.data();
-                    if (dados.metasPorCategoria) {
-                        for (let cat in dados.metasPorCategoria) {
-                            metasCategoriasGlobais[cat] = (metasCategoriasGlobais[cat] || 0) + (Number(dados.metasPorCategoria[cat]) || 0);
+                for (let alvo of colecoesParaBuscar) {
+                    const docRef = doc(alvo.db, alvo.col, periodoId);
+                    const snap = await getDoc(docRef);
+                    if (snap.exists()) {
+                        const dados = snap.data();
+
+                        if (dados.meta) {
+                            metasCategoriasGlobais[alvo.catPadrao] = (metasCategoriasGlobais[alvo.catPadrao] || 0) + (Number(dados.meta) || 0);
                         }
-                    } else if (dados.meta) {
-                        metasCategoriasGlobais["Mecanica"] += Number(dados.meta) || 0;
+
+                        (dados.itens || []).forEach(item => {
+                            let cat = item.categoria || classificarCategoriaPorItem(item, alvo.catPadrao);
+                            itensConsolidadosGlobais.push({ ...item, origem: alvo.origem, categoria: cat });
+                        });
                     }
-
-                    (dados.itens || []).forEach(item => {
-                        let cat = item.categoria || classificarCategoriaPorItem(item, "Mecânica");
-                        itensConsolidadosGlobais.push({ ...item, origem: "Mecânica", categoria: cat });
-                    });
                 }
-
-                const docElecRef = doc(dbElec, "listas_mensais", periodoId);
-                const snapElec = await getDoc(docElecRef);
-                if (snapElec.exists()) {
-                    const dados = snapElec.data();
-                    if (dados.metasPorCategoria) {
-                        for (let cat in dados.metasPorCategoria) {
-                            metasCategoriasGlobais[cat] = (metasCategoriasGlobais[cat] || 0) + (Number(dados.metasPorCategoria[cat]) || 0);
-                        }
-                    } else if (dados.meta) {
-                        metasCategoriasGlobais["Eletrica"] += Number(dados.meta) || 0;
-                    }
-
-                    (dados.itens || []).forEach(item => {
-                        let cat = item.categoria || classificarCategoriaPorItem(item, "Elétrica");
-                        itensConsolidadosGlobais.push({ ...item, origem: "Elétrica", categoria: cat });
-                    });
-                }
-
             } catch (error) {
-                console.error("Erro ao buscar dados dos Firestore:", error);
+                console.error("Erro ao buscar dados consolidados do Firestore:", error);
             }
 
             renderizarDashboardConsolidado();
@@ -342,7 +375,7 @@
             if (nome.includes("civil") || nome.includes("cimento") || nome.includes("piso")) return "Civil";
             if (nome.includes("ferramenta") || nome.includes("chave") || nome.includes("furadeira")) return "Ferramentas";
             if (nome.includes("hidrául") || nome.includes("tubo") || nome.includes("conexão")) return "Hidraulica";
-            
+
             return origemPadrao === "Elétrica" ? "Eletrica" : "Mecanica";
         }
 
@@ -368,7 +401,7 @@
 
             document.getElementById('cardMetaTotal').innerText = formatarMoedaBR(metaTotalGeral);
             document.getElementById('cardGastoTotal').innerText = formatarMoedaBR(gastoTotalGeral);
-            
+
             let saldoTotal = metaTotalGeral - gastoTotalGeral;
             let saldoUI = document.getElementById('cardSaldoTotal');
             saldoUI.innerText = formatarMoedaBR(saldoTotal);
@@ -445,7 +478,6 @@
             }).join('');
         }
 
-        // CARREGAR TABELA E VALORES DO RESUMO ANUAL NA TELA
         window.carregarResumoAnualTela = async () => {
             const ano = document.getElementById('selectAno').value;
             document.getElementById('anoResumoTexto').innerText = `Ano: ${ano}`;
@@ -506,7 +538,7 @@
 
             document.getElementById('resumoMetaAnual').innerText = formatarMoedaBR(metaAnualTotal);
             document.getElementById('resumoGastoAnual').innerText = formatarMoedaBR(gastoAnualTotal);
-            
+
             let saldoAnualUI = document.getElementById('resumoSaldoAnual');
             saldoAnualUI.innerText = formatarMoedaBR(diferencaAnualTotal);
             saldoAnualUI.className = "text-lg font-black " + (diferencaAnualTotal >= 0 ? "positivo" : "negativo");
@@ -525,7 +557,6 @@
             }).join('');
         }
 
-        // EXPORTAR PDF POR PERÍODO (DATA INÍCIO/FIM) E SETOR
         window.exportarPdfPorPeriodoESetor = async () => {
             const dataI = document.getElementById('dataInicioPdf').value;
             const dataF = document.getElementById('dataFimPdf').value;
@@ -641,18 +672,18 @@
             docPdf.setTextColor(30, 30, 30);
             docPdf.text(formatarMoedaBR(metaTotalPeriodo), 20, 64);
             docPdf.text(formatarMoedaBR(gastoTotalPeriodo), 85, 64);
-            
+
             docPdf.setTextColor(saldoPeriodo >= 0 ? 16 : 239, saldoPeriodo >= 0 ? 185 : 68, saldoPeriodo >= 0 ? 129 : 68);
             docPdf.text(formatarMoedaBR(saldoPeriodo), 145, 64);
 
             let corpoTabela = itensFiltradosPeriodo.map(p => {
                 let sub = (Number(p.valor) || 0) * (Number(p.quantidade) || 1);
                 return [
-                    p.origem, 
-                    p.categoria, 
-                    p.nome, 
-                    p.quantidade || 1, 
-                    formatarMoedaBR(p.valor || 0), 
+                    p.origem,
+                    p.categoria,
+                    p.nome,
+                    p.quantidade || 1,
+                    formatarMoedaBR(p.valor || 0),
                     formatarMoedaBR(sub)
                 ];
             });
@@ -682,7 +713,6 @@
             docPdf.save(`Relatorio_Supervisao_${dataI}_a_${dataF}.pdf`);
         }
 
-        // EXPORTAR PDF ANUAL GERAL
         window.exportarPdfAnualConsolidado = async () => {
             const ano = document.getElementById('selectAno').value;
             let metaAnualTotal = 0;
@@ -764,7 +794,7 @@
             docPdf.setTextColor(30, 30, 30);
             docPdf.text(formatarMoedaBR(metaAnualTotal), 20, 52);
             docPdf.text(formatarMoedaBR(gastoAnualTotal), 85, 52);
-            
+
             docPdf.setTextColor(diferencaAnualTotal >= 0 ? 16 : 239, diferencaAnualTotal >= 0 ? 185 : 68, diferencaAnualTotal >= 0 ? 129 : 68);
             docPdf.text(formatarMoedaBR(diferencaAnualTotal), 140, 52);
 
@@ -806,4 +836,5 @@
         init();
     </script>
 </body>
+
 </html>

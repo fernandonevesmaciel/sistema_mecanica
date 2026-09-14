@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛠️ Ferramentas App - Mecânica</title>
+    <title>⚙️ Ferramentas App - Sala de Máquinas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -12,11 +12,11 @@
 
     <style>
         :root {
-            --primary: #10b981;
+            --primary: #0284c7;
             --border: #e2e8f0;
         }
 
-        /* Cor Esmeralda para Ferramentas */
+        /* Cor Azul Celeste para Sala de Máquinas */
         .navbar {
             position: fixed;
             top: 0;
@@ -71,9 +71,9 @@
 <body class="bg-slate-50 min-h-screen px-4 pb-12">
     <nav class="navbar shadow-sm">
         <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">
-            <span>🛠️</span> FERRAMENTAS - MECÂNICA</div>
+            <span>⚙️</span> FERRAMENTAS - SALA DE MÁQUINAS</div>
         <a href="../principal.html"
-            class="text-slate-500 hover:text-emerald-600 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar
+            class="text-slate-500 hover:text-sky-600 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar
             ao Início</a>
     </nav>
 
@@ -81,16 +81,16 @@
         <div
             class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
             <div>
-                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-emerald-600 uppercase">Lista de
-                    Compras - Ferramentas</h1>
-                <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Sincronização Automática para
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-sky-600 uppercase">Lista de Compras
+                    - Sala de Máquinas</h1>
+                <p class="text-[10px] text-sky-500 font-bold uppercase tracking-wider">● Sincronização Automática para
                     Compras</p>
             </div>
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex flex-col">
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Meta deste Mês</label>
                     <input type="text" id="limiteOrcamento" disabled oninput="aplicarMascara(this)"
-                        class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-400 w-48 text-right disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 w-48 text-right disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
                 <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
                     <select id="selectMes" onchange="trocarPeriodo()"
@@ -124,7 +124,7 @@
                 <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Pesquisar Ferramenta</h2>
                 <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)"
                     placeholder="Digite nome ou código..."
-                    class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-400 mb-4 transition-all">
+                    class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-400 mb-4 transition-all">
                 <div id="listaSugestoes" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scroll"></div>
             </div>
 
@@ -138,7 +138,7 @@
                             class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR
                             PDF</button>
                         <button onclick="window.exportarLibreOffice()"
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR
+                            class="bg-sky-600 hover:bg-sky-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR
                             PLANILHA</button>
                     </div>
                 </div>
@@ -161,11 +161,11 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // ================= CONFIGURAÇÕES FIREBASE (MECÂNICA) =================
-        const firebaseConfigMecanica = {
+        // ================= CONFIGURAÇÕES FIREBASE (SALA DE MÁQUINAS) =================
+        const firebaseConfigMaquina = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
             authDomain: "mecanica-699bb.firebaseapp.com",
             projectId: "mecanica-699bb",
@@ -174,23 +174,9 @@
             measurementId: "G-G78PR55F9F"
         };
 
-        const firebaseConfigEletrica = {
-            apiKey: "AIzaSyB_w4-z_onAEUf10ROfYCmvnm6Fkkp2sYo",
-            authDomain: "eletrica-8c96e.firebaseapp.com",
-            projectId: "eletrica-8c96e",
-            storageBucket: "eletrica-8c96e.firebasestorage.app",
-            messagingSenderId: "456815528430",
-            appId: "1:456815528430:web:4cf873dc8071c9a2bbe6ff"
-        };
-
-        // Inicializa o app primário (Mecânica)
-        const app = initializeApp(firebaseConfigMecanica);
+        const app = initializeApp(firebaseConfigMaquina);
         const db = getFirestore(app);
         const auth = getAuth(app);
-
-        // Inicializa o app secundário (Elétrica para integrações se admin)
-        const appEletrica = initializeApp(firebaseConfigEletrica, "appEletrica");
-        const dbEletrica = getFirestore(appEletrica);
 
         const ADMIN_IDS = [
             "0dN2teZrTkYkg26rBrKcEDpy5El1",
@@ -201,7 +187,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user && ADMIN_IDS.includes(String(user.uid).trim())) {
                 isUserAdmin = true;
-                // Libera o input de meta se o admin estiver logado
                 const inputMeta = document.getElementById('limiteOrcamento');
                 if (inputMeta) inputMeta.removeAttribute('disabled');
             } else {
@@ -239,7 +224,7 @@
 
         async function salvarMetaNoBanco() {
             if (!isUserAdmin) return;
-            await setDoc(doc(db, "listas_mensais_ferramentas", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
+            await setDoc(doc(db, "listas_mensais_sala_maquinas", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
         }
 
         window.trocarPeriodo = () => {
@@ -247,10 +232,10 @@
             const ano = document.getElementById('selectAno').value;
             periodoId = `${mes}-${ano}`;
             const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
-            document.getElementById('labelPeriodo').innerText = `Orçamento Ferramentas: ${mesNome} / ${ano}`;
+            document.getElementById('labelPeriodo').innerText = `Orçamento Sala de Máquinas: ${mesNome} / ${ano}`;
             editandoId = null;
 
-            onSnapshot(doc(db, "listas_mensais_ferramentas", periodoId), (docSnap) => {
+            onSnapshot(doc(db, "listas_mensais_sala_maquinas", periodoId), (docSnap) => {
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
                     carrinhoAtual = dados.itens || [];
@@ -274,20 +259,20 @@
             lista.innerHTML = filtrados.map(p => {
                 const jaEstaNoCarrinho = carrinhoAtual.some(item => item.id === p.id);
                 return `
-                <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-emerald-200">
+                <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-sky-200">
                     <p class="font-bold text-slate-800 text-sm leading-tight">${p.nome}</p>
                     <p class="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-tighter">Cód: ${p.codigo} | Unit: R$ ${p.valor}</p>
                     
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1">
-                        <input type="date" id="dataDesejada-${p.id}" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-emerald-400" title="Data Desejada">
-                        <input type="text" id="local-${p.id}" placeholder="Local (ex: Oficina)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-emerald-400">
-                        <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-emerald-400">
-                        <input type="text" id="movimentacao-${p.id}" placeholder="Cód. Mov." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-emerald-400">
+                        <input type="date" id="dataDesejada-${p.id}" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400" title="Data Desejada">
+                        <input type="text" id="local-${p.id}" placeholder="Local (ex: Máquinas)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                        <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                        <input type="text" id="movimentacao-${p.id}" placeholder="Cód. Mov." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
                     </div>
 
                     <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
                         <input type="number" id="qtd-${p.id}" value="1" min="1" class="w-16 p-2 bg-slate-100 border rounded-lg text-sm font-bold text-center outline-none">
-                        <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md ${jaEstaNoCarrinho ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100'}">${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}</button>
+                        <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md ${jaEstaNoCarrinho ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-sky-600 text-white hover:bg-sky-700 shadow-sky-100'}">${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}</button>
                     </div>
                 </div>`;
             }).join('');
@@ -297,7 +282,7 @@
             const prod = todosProdutos.find(p => p.id === id);
             const qtd = parseInt(document.getElementById(`qtd-${id}`).value) || 1;
             const dataDes = document.getElementById(`dataDesejada-${id}`).value || "";
-            const localUso = document.getElementById(`local-${id}`).value || "Geral";
+            const localUso = document.getElementById(`local-${id}`).value || "Sala de Máquinas";
             const codNimbi = document.getElementById(`nimbi-${id}`).value || "";
             const codMov = document.getElementById(`movimentacao-${id}`).value || "";
 
@@ -305,7 +290,7 @@
 
             if (!carrinhoAtual.some(i => i.id === id)) {
                 const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd, dataDesejada: dataDes, local: localUso, codigoNimbi: codNimbi, codigoMovimentacao: codMov }];
-                await setDoc(doc(db, "listas_mensais_ferramentas", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+                await setDoc(doc(db, "listas_mensais_sala_maquinas", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
 
                 // SALVA DIRETAMENTE NO HISTÓRICO GLOBAL
                 await addDoc(collection(db, "compras"), {
@@ -314,7 +299,7 @@
                     codigoNimbi: codNimbi,
                     codigoMovimentacao: codMov,
                     local: localUso,
-                    origem: "Ferramentas",
+                    origem: "Sala de Máquinas",
                     quantidade: qtd,
                     dataDesejada: dataDes,
                     valorUnitario: valorUnit,
@@ -329,7 +314,7 @@
 
         window.remover = async (id) => {
             const novaLista = carrinhoAtual.filter(i => i.id !== id);
-            await setDoc(doc(db, "listas_mensais_ferramentas", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+            await setDoc(doc(db, "listas_mensais_sala_maquinas", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
         };
 
         window.editar = (id) => {
@@ -347,7 +332,7 @@
             if (index !== -1) {
                 const novaQtd = parseInt(document.getElementById(`edit-qtd-${id}`).value) || 1;
                 const novaDataDes = document.getElementById(`edit-dataDes-${id}`).value || "";
-                const novoLocal = document.getElementById(`edit-local-${id}`).value || "Geral";
+                const novoLocal = document.getElementById(`edit-local-${id}`).value || "Sala de Máquinas";
                 const novoNimbi = document.getElementById(`edit-nimbi-${id}`).value || "";
                 const novoMov = document.getElementById(`edit-mov-${id}`).value || "";
 
@@ -360,7 +345,7 @@
                 editandoId = null;
                 renderizarCarrinho();
 
-                await setDoc(doc(db, "listas_mensais_ferramentas", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
+                await setDoc(doc(db, "listas_mensais_sala_maquinas", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
             }
         };
 
@@ -374,7 +359,7 @@
             const mesRef = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             const anoRef = document.getElementById('selectAno').value;
 
-            let itensParaRelatorio = carrinhoAtual.map(i => ({ ...i, origem: "Ferramentas" }));
+            let itensParaRelatorio = carrinhoAtual.map(i => ({ ...i, origem: "Sala de Máquinas" }));
 
             const gruposNimbi = {};
             const totaisMovimentacao = {};
@@ -398,7 +383,7 @@
             });
 
             docPdf.setFontSize(14);
-            docPdf.text(`Relatório de Compras (Ferramentas): ${mesRef} / ${anoRef}`, 14, 15);
+            docPdf.text(`Relatório de Compras (Sala de Máquinas): ${mesRef} / ${anoRef}`, 14, 15);
 
             let currentY = 22;
             let gastoTotalSomado = 0;
@@ -415,7 +400,7 @@
 
                 docPdf.setFontSize(11);
                 docPdf.setFont(undefined, 'bold');
-                docPdf.setTextColor(16, 185, 129); // Esmeralda
+                docPdf.setTextColor(2, 132, 199); // Azul Celeste
                 docPdf.text(`Cód Nimbi: ${nimbi}`, 14, currentY);
                 docPdf.setTextColor(0, 0, 0);
                 currentY += 5;
@@ -430,7 +415,7 @@
                         item.codigo || "-",
                         item.codigoMovimentacao || "-",
                         item.nome,
-                        item.local || "Geral",
+                        item.local || "Sala de Máquinas",
                         item.quantidade,
                         `R$ ${vUnit.toFixed(2).replace('.', ',')}`,
                         `R$ ${totalLinha.toFixed(2).replace('.', ',')}`
@@ -442,7 +427,7 @@
                     body: linhas,
                     startY: currentY,
                     theme: 'striped',
-                    headStyles: { fillColor: [16, 185, 129] },
+                    headStyles: { fillColor: [2, 132, 199] },
                     styles: { fontSize: 8 },
                     margin: { bottom: 15 }
                 });
@@ -473,14 +458,14 @@
 
             docPdf.setFontSize(11);
             docPdf.setFont(undefined, 'bold');
-            docPdf.text(`RESUMO GERAL DO MÊS (FERRAMENTAS)`, 18, currentY + 2);
+            docPdf.text(`RESUMO GERAL DO MÊS (SALA DE MÁQUINAS)`, 18, currentY + 2);
             currentY += 10;
 
             docPdf.setFontSize(10);
             docPdf.setFont(undefined, 'normal');
             docPdf.text(`Total de Compras Solicitadas: R$ ${gastoTotalSomado.toFixed(2).replace('.', ',')}`, 18, currentY);
             currentY += 5;
-            docPdf.text(`Meta (Ferramentas): R$ ${valorLimiteDesteMes.toFixed(2).replace('.', ',')}`, 18, currentY);
+            docPdf.text(`Meta (Sala de Máquinas): R$ ${valorLimiteDesteMes.toFixed(2).replace('.', ',')}`, 18, currentY);
 
             currentY += 10;
             docPdf.setFontSize(10);
@@ -497,7 +482,7 @@
                 currentY += 5;
             });
 
-            docPdf.save(`Orcamento_Ferramentas_${mesRef}_${anoRef}.pdf`);
+            docPdf.save(`Orcamento_SalaMaquinas_${mesRef}_${anoRef}.pdf`);
             btn.innerText = textoOriginal;
         };
 
@@ -515,7 +500,7 @@
                     "Cód. Mov.": item.codigoMovimentacao || "",
                     "Data Desejada": item.dataDesejada || "",
                     "Descrição da Ferramenta": item.nome,
-                    "Local de Aplicação": item.local || "Geral",
+                    "Local de Aplicação": item.local || "Sala de Máquinas",
                     "Qtd": item.quantidade,
                     "Valor Unitário": vUnit,
                     "Valor Total": vUnit * item.quantidade
@@ -529,8 +514,8 @@
                 { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }
             ];
 
-            XLSX.utils.book_append_sheet(wb, ws, "Orcamento_Ferramentas");
-            XLSX.writeFile(wb, `Orcamento_Ferramentas_${mesRef}_${anoRef}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Orcamento_SalaMaquinas");
+            XLSX.writeFile(wb, `Orcamento_SalaMaquinas_${mesRef}_${anoRef}.xlsx`);
         };
 
         function renderizarCarrinho() {
@@ -548,25 +533,25 @@
 
                 if (editandoId === p.id) {
                     return `
-                    <li class="p-4 bg-emerald-50 border-b border-emerald-100 flex flex-col gap-2">
-                        <p class="text-sm font-bold text-emerald-800 leading-tight">Editando: ${p.nome}</p>
+                    <li class="p-4 bg-sky-50 border-b border-sky-100 flex flex-col gap-2">
+                        <p class="text-sm font-bold text-sky-800 leading-tight">Editando: ${p.nome}</p>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-1">
-                            <input type="date" id="edit-dataDes-${p.id}" value="${p.dataDesejada || ''}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-emerald-400" title="Data Desejada">
-                            <input type="text" id="edit-local-${p.id}" value="${p.local || ''}" placeholder="Local" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-emerald-400">
-                            <input type="text" id="edit-nimbi-${p.id}" value="${p.codigoNimbi || ''}" placeholder="Cód. Nimbi" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-emerald-400">
-                            <input type="text" id="edit-mov-${p.id}" value="${p.codigoMovimentacao || ''}" placeholder="Cód. Mov." class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-emerald-400">
-                            <input type="number" id="edit-qtd-${p.id}" value="${p.quantidade}" min="1" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-center outline-none focus:ring-1 focus:ring-emerald-400">
+                            <input type="date" id="edit-dataDes-${p.id}" value="${p.dataDesejada || ''}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400" title="Data Desejada">
+                            <input type="text" id="edit-local-${p.id}" value="${p.local || ''}" placeholder="Local" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                            <input type="text" id="edit-nimbi-${p.id}" value="${p.codigoNimbi || ''}" placeholder="Cód. Nimbi" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                            <input type="text" id="edit-mov-${p.id}" value="${p.codigoMovimentacao || ''}" placeholder="Cód. Mov." class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-sky-400">
+                            <input type="number" id="edit-qtd-${p.id}" value="${p.quantidade}" min="1" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-center outline-none focus:ring-1 focus:ring-sky-400">
                         </div>
                         <div class="flex justify-end gap-2 mt-2">
                             <button onclick="cancelarEdicao()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold rounded-lg uppercase transition-colors">Cancelar</button>
-                            <button onclick="salvarEdicao('${p.id}')" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg uppercase shadow-sm transition-colors">Salvar Alterações</button>
+                            <button onclick="salvarEdicao('${p.id}')" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-[10px] font-bold rounded-lg uppercase shadow-sm transition-colors">Salvar Alterações</button>
                         </div>
                     </li>`;
                 }
 
                 const nimbiHtml = p.codigoNimbi ? `<span class="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold uppercase border border-purple-100">Nimbi: ${p.codigoNimbi}</span>` : '';
                 const movHtml = p.codigoMovimentacao ? `<span class="text-[9px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold uppercase border border-amber-100">Mov: ${p.codigoMovimentacao}</span>` : '';
-                const dataDesHtml = p.dataDesejada ? `<span class="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-100">Para: ${p.dataDesejada.split('-').reverse().join('/')}</span>` : '';
+                const dataDesHtml = p.dataDesejada ? `<span class="text-[9px] bg-sky-50 text-sky-600 px-1.5 py-0.5 rounded font-bold uppercase border border-sky-100">Para: ${p.dataDesejada.split('-').reverse().join('/')}</span>` : '';
 
                 return `
                 <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors border-b border-slate-50">
@@ -575,7 +560,7 @@
                         <div class="flex flex-wrap gap-2 items-center mt-1">
                             <span class="text-[9px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300">Cód: ${p.codigo || 'S/C'}</span>
                             <p class="text-[10px] text-slate-400 font-black uppercase tracking-tight">${p.quantidade} un x R$ ${p.valor}</p>
-                            <span class="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-bold uppercase border border-emerald-100">${p.local || 'Geral'}</span>
+                            <span class="text-[9px] bg-sky-50 text-sky-600 px-1.5 py-0.5 rounded font-bold uppercase border border-sky-100">${p.local || 'Sala de Máquinas'}</span>
                             ${dataDesHtml}
                             ${nimbiHtml}
                             ${movHtml}
@@ -584,7 +569,7 @@
                     <div class="flex items-center gap-4 shrink-0">
                         <span class="text-sm font-black text-slate-800 tracking-tighter">R$ ${totalLinha.toFixed(2).replace('.', ',')}</span>
                         <div class="flex gap-1 bg-slate-100 rounded-lg p-1">
-                            <button onclick="editar('${p.id}')" class="p-1.5 text-emerald-500 hover:bg-emerald-200 hover:text-emerald-700 rounded-md font-bold text-xs transition-colors" title="Editar">✏️</button>
+                            <button onclick="editar('${p.id}')" class="p-1.5 text-sky-500 hover:bg-sky-200 hover:text-sky-700 rounded-md font-bold text-xs transition-colors" title="Editar">✏️</button>
                             <button onclick="remover('${p.id}')" class="p-1.5 text-red-400 hover:bg-red-200 hover:text-red-600 rounded-md font-bold text-xs transition-colors" title="Remover">✕</button>
                         </div>
                     </div>

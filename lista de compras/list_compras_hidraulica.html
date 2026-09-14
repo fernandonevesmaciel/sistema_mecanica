@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,41 +9,111 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
+
     <style>
-        :root { --primary: #0ea5e9; --border: #e2e8f0; } /* Cor Ciano/Azul Água para Hidráulica */
-        .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; box-sizing: border-box; z-index: 1000; }
-        body { padding-top: 85px; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .ultrapassou { color: #ef4444 !important; }
-        .alerta-animado { animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        :root {
+            --primary: #0ea5e9;
+            --border: #e2e8f0;
+        }
+
+        /* Cor Ciano/Azul Água para Hidráulica */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+
+        body {
+            padding-top: 85px;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .ultrapassou {
+            color: #ef4444 !important;
+        }
+
+        .alerta-animado {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
     </style>
 </head>
+
 <body class="bg-slate-50 min-h-screen px-4 pb-12">
     <nav class="navbar shadow-sm">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>💧</span> HIDRÁULICA APP</div>
-        <a href="../principal.html" class="text-slate-500 hover:text-sky-500 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">
+            <span>💧</span> HIDRÁULICA APP</div>
+        <a href="../principal.html"
+            class="text-slate-500 hover:text-sky-500 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar
+            ao Início</a>
     </nav>
 
     <div class="max-w-6xl mx-auto">
-        <div class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
+        <div
+            class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
             <div>
-                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-sky-500 uppercase">Lista de Compras - Hidráulica</h1>
-                <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Sincronização Automática para Compras</p>
+                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-sky-500 uppercase">Lista de Compras
+                    - Hidráulica</h1>
+                <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Sincronização Automática para
+                    Compras</p>
             </div>
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex flex-col">
                     <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Meta deste Mês</label>
-                    <input type="text" id="limiteOrcamento" disabled oninput="aplicarMascara(this)" class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 w-48 text-right disabled:opacity-50 disabled:cursor-not-allowed">
+                    <input type="text" id="limiteOrcamento" disabled oninput="aplicarMascara(this)"
+                        class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 w-48 text-right disabled:opacity-50 disabled:cursor-not-allowed">
                 </div>
                 <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
-                    <select id="selectMes" onchange="trocarPeriodo()" class="bg-transparent px-2 font-bold text-slate-700 outline-none">
-                        <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                    <select id="selectMes" onchange="trocarPeriodo()"
+                        class="bg-transparent px-2 font-bold text-slate-700 outline-none">
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
                     </select>
-                    <select id="selectAno" onchange="trocarPeriodo()" class="bg-transparent px-2 font-bold text-slate-700 outline-none">
-                        <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option>
+                    <select id="selectAno" onchange="trocarPeriodo()"
+                        class="bg-transparent px-2 font-bold text-slate-700 outline-none">
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
                     </select>
                 </div>
             </div>
@@ -51,26 +122,39 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
                 <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Pesquisar Material</h2>
-                <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)" placeholder="Digite nome ou código..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-400 mb-4 transition-all">
+                <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)"
+                    placeholder="Digite nome ou código..."
+                    class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-400 mb-4 transition-all">
                 <div id="listaSugestoes" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scroll"></div>
             </div>
 
-            <div class="lg:col-span-7 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-fit">
+            <div
+                class="lg:col-span-7 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-fit">
                 <div class="bg-slate-800 p-4 flex justify-between items-center shrink-0">
-                    <h2 class="text-white font-bold text-xs uppercase tracking-widest" id="labelPeriodo">Carregando...</h2>
+                    <h2 class="text-white font-bold text-xs uppercase tracking-widest" id="labelPeriodo">Carregando...
+                    </h2>
                     <div class="flex items-center gap-2">
-                        <button id="btnGerarPDF" onclick="window.exportarPDF()" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR PDF</button>
-                        <button onclick="window.exportarLibreOffice()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR PLANILHA</button>
+                        <button id="btnGerarPDF" onclick="window.exportarPDF()"
+                            class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR
+                            PDF</button>
+                        <button onclick="window.exportarLibreOffice()"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR
+                            PLANILHA</button>
                     </div>
                 </div>
                 <div class="p-4 bg-slate-50 border-b flex justify-between items-center shrink-0">
                     <div class="flex flex-col">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subtotal Acumulado</span>
-                        <span id="totalPreco" class="text-2xl font-black text-slate-800 tracking-tighter transition-all">R$ 0,00</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subtotal
+                            Acumulado</span>
+                        <span id="totalPreco"
+                            class="text-2xl font-black text-slate-800 tracking-tighter transition-all">R$ 0,00</span>
                     </div>
-                    <div id="alertaLimite" class="hidden bg-red-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase alerta-animado">⚠️ Limite Excedido</div>
+                    <div id="alertaLimite"
+                        class="hidden bg-red-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase alerta-animado">
+                        ⚠️ Limite Excedido</div>
                 </div>
-                <ul id="listaComprasUI" class="divide-y divide-slate-100 overflow-y-auto max-h-[450px] custom-scroll min-h-[300px]"></ul>
+                <ul id="listaComprasUI"
+                    class="divide-y divide-slate-100 overflow-y-auto max-h-[450px] custom-scroll min-h-[300px]"></ul>
             </div>
         </div>
     </div>
@@ -80,7 +164,7 @@
         import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// ================= CONFIGURAÇÕES FIREBASE (MECÂNICA) =================
+        // ================= CONFIGURAÇÕES FIREBASE (MECÂNICA) =================
         const firebaseConfigMecanica = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
             authDomain: "mecanica-699bb.firebaseapp.com",
@@ -154,7 +238,7 @@
         };
 
         async function salvarMetaNoBanco() {
-            if (!isUserAdmin) return; 
+            if (!isUserAdmin) return;
             await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
         }
 
@@ -216,19 +300,21 @@
             const localUso = document.getElementById(`local-${id}`).value || "Geral";
             const codNimbi = document.getElementById(`nimbi-${id}`).value || "";
             const codMov = document.getElementById(`movimentacao-${id}`).value || "";
-            
+
             const valorUnit = parseFloat(String(prod.valor).replace(',', '.'));
-            
+
             if (!carrinhoAtual.some(i => i.id === id)) {
                 const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd, dataDesejada: dataDes, local: localUso, codigoNimbi: codNimbi, codigoMovimentacao: codMov }];
                 await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
 
-                await addDoc(collection(db, "compras_hidraulica"), {
+                // SALVA DIRETAMENTE NO HISTÓRICO GLOBAL
+                await addDoc(collection(db, "compras"), {
                     nome: prod.nome,
                     codigo: prod.codigo || "S/C",
                     codigoNimbi: codNimbi,
                     codigoMovimentacao: codMov,
                     local: localUso,
+                    origem: "Hidráulica",
                     quantidade: qtd,
                     dataDesejada: dataDes,
                     valorUnitario: valorUnit,
@@ -281,25 +367,25 @@
         window.exportarPDF = async () => {
             const btn = document.getElementById('btnGerarPDF');
             const textoOriginal = btn.innerText;
-            btn.innerText = "GERANDO..."; 
+            btn.innerText = "GERANDO...";
 
             const { jsPDF } = window.jspdf;
             const docPdf = new jsPDF();
             const mesRef = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             const anoRef = document.getElementById('selectAno').value;
 
-            let itensParaRelatorio = carrinhoAtual.map(i => ({...i, origem: "Hidráulica"}));
+            let itensParaRelatorio = carrinhoAtual.map(i => ({ ...i, origem: "Hidráulica" }));
 
             const gruposNimbi = {};
-            const totaisMovimentacao = {}; 
-            
+            const totaisMovimentacao = {};
+
             itensParaRelatorio.forEach(item => {
                 const nimbi = (item.codigoNimbi || "").trim() || "Sem Código Nimbi";
                 if (!gruposNimbi[nimbi]) {
                     gruposNimbi[nimbi] = { itens: [], subtotal: 0 };
                 }
                 gruposNimbi[nimbi].itens.push(item);
-                
+
                 const vUnit = parseFloat(String(item.valor).replace(',', '.')) || 0;
                 const qtd = parseInt(item.quantidade) || 1;
                 const totalLinha = vUnit * qtd;
@@ -313,7 +399,7 @@
 
             docPdf.setFontSize(14);
             docPdf.text(`Relatório de Compras (Hidráulica): ${mesRef} / ${anoRef}`, 14, 15);
-            
+
             let currentY = 22;
             let gastoTotalSomado = 0;
 
@@ -329,9 +415,9 @@
 
                 docPdf.setFontSize(11);
                 docPdf.setFont(undefined, 'bold');
-                docPdf.setTextColor(14, 165, 233); 
+                docPdf.setTextColor(14, 165, 233);
                 docPdf.text(`Cód Nimbi: ${nimbi}`, 14, currentY);
-                docPdf.setTextColor(0, 0, 0); 
+                docPdf.setTextColor(0, 0, 0);
                 currentY += 5;
 
                 const colunas = ["Cód", "Mov", "Material", "Local", "Qtd", "Unit", "Total"];
@@ -339,42 +425,42 @@
                 const linhas = grupo.itens.map(item => {
                     const vUnit = parseFloat(String(item.valor).replace(',', '.')) || 0;
                     const totalLinha = vUnit * item.quantidade;
-                    
+
                     return [
-                        item.codigo || "-", 
-                        item.codigoMovimentacao || "-", 
-                        item.nome, 
-                        item.local || "Geral", 
+                        item.codigo || "-",
+                        item.codigoMovimentacao || "-",
+                        item.nome,
+                        item.local || "Geral",
                         item.quantidade,
-                        `R$ ${vUnit.toFixed(2).replace('.', ',')}`, 
+                        `R$ ${vUnit.toFixed(2).replace('.', ',')}`,
                         `R$ ${totalLinha.toFixed(2).replace('.', ',')}`
                     ];
                 });
 
-                docPdf.autoTable({ 
-                    head: [colunas], 
-                    body: linhas, 
+                docPdf.autoTable({
+                    head: [colunas],
+                    body: linhas,
                     startY: currentY,
                     theme: 'striped',
-                    headStyles: { fillColor: [14, 165, 233] }, 
+                    headStyles: { fillColor: [14, 165, 233] },
                     styles: { fontSize: 8 },
-                    margin: { bottom: 15 } 
+                    margin: { bottom: 15 }
                 });
 
                 currentY = docPdf.lastAutoTable.finalY + 6;
-                
+
                 docPdf.setFontSize(10);
                 docPdf.setFont(undefined, 'bold');
                 docPdf.text(`Cód Nimbi ${nimbi} Valor R$ ${grupo.subtotal.toFixed(2).replace('.', ',')}`, 14, currentY);
-                
-                currentY += 12; 
+
+                currentY += 12;
                 gastoTotalSomado += grupo.subtotal;
             }
 
             const chavesMov = Object.keys(totaisMovimentacao).sort();
-            
-            let alturaResumoBase = 20; 
-            let alturaSessaoMovimentos = 15 + (chavesMov.length * 5); 
+
+            let alturaResumoBase = 20;
+            let alturaSessaoMovimentos = 15 + (chavesMov.length * 5);
             let alturaTotalBox = alturaResumoBase + alturaSessaoMovimentos;
 
             if (currentY + alturaTotalBox > 280) {
@@ -382,14 +468,14 @@
                 currentY = 20;
             }
 
-            docPdf.setFillColor(241, 245, 249); 
+            docPdf.setFillColor(241, 245, 249);
             docPdf.rect(14, currentY - 5, 180, alturaTotalBox, 'F');
-            
+
             docPdf.setFontSize(11);
             docPdf.setFont(undefined, 'bold');
             docPdf.text(`RESUMO GERAL DO MÊS (HIDRÁULICA)`, 18, currentY + 2);
             currentY += 10;
-            
+
             docPdf.setFontSize(10);
             docPdf.setFont(undefined, 'normal');
             docPdf.text(`Total de Compras Solicitadas: R$ ${gastoTotalSomado.toFixed(2).replace('.', ',')}`, 18, currentY);
@@ -400,11 +486,11 @@
             docPdf.setFontSize(10);
             docPdf.setFont(undefined, 'bold');
             docPdf.text(`TOTAL GASTO POR CÓDIGO DE MOVIMENTAÇÃO:`, 18, currentY);
-            
+
             currentY += 6;
             docPdf.setFontSize(9);
             docPdf.setFont(undefined, 'normal');
-            
+
             chavesMov.forEach(mov => {
                 const totalMovStr = `R$ ${totaisMovimentacao[mov].toFixed(2).replace('.', ',')}`;
                 docPdf.text(`- Cód Mov: ${mov} -> ${totalMovStr}`, 18, currentY);
@@ -459,7 +545,7 @@
             ui.innerHTML = carrinhoAtual.map(p => {
                 const totalLinha = (parseFloat(String(p.valor).replace(',', '.')) || 0) * (p.quantidade || 1);
                 somaTotalGlobal += totalLinha;
-                
+
                 if (editandoId === p.id) {
                     return `
                     <li class="p-4 bg-sky-50 border-b border-sky-100 flex flex-col gap-2">
@@ -504,7 +590,7 @@
                     </div>
                 </li>`;
             }).join('');
-            
+
             document.getElementById('totalPreco').innerText = `R$ ${somaTotalGlobal.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`;
             validarLimite();
         }
@@ -524,4 +610,5 @@
         init();
     </script>
 </body>
+
 </html>

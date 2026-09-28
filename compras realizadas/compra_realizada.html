@@ -17,7 +17,7 @@
         /* Cores de Status */
         .status-solicitacao { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
         .status-liberado { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-        .status-pedido { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; } /* Laranja claro para pedido */
+        .status-pedido { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
         .status-cancelado { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
         .status-atendido { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         .status-parcial { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
@@ -28,9 +28,8 @@
         .obs-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; }
         .obs-input:focus { border-color: #f97316; background: #fff; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
         
-        /* Estilo para os inputs de filtro */
-        .filter-control { background: white; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; }
-        .filter-control:focus { border-color: #f97316; right: 2px ring #ffedd5; }
+        .filter-control { background: white; border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; }
+        .filter-control:focus { border-color: #f97316; }
     </style>
 </head>
 <body class="pt-24 pb-12 px-4">
@@ -44,7 +43,7 @@
         <div class="mb-8 flex flex-col justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">📦 Histórico de Compras Realizadas</h1>
-                <p class="text-slate-400 text-sm font-medium">Gerenciamento de status e observações em tempo real.</p>
+                <p class="text-slate-400 text-sm font-medium">Gestão de estado, filtros por mês/semana e observações em tempo real.</p>
             </div>
 
             <!-- FILTROS E AÇÕES -->
@@ -52,28 +51,57 @@
                 
                 <!-- BOTÕES -->
                 <div class="flex gap-2">
-                    <button id="btnPendencias" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
+                    <button id="btnPendencias" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
                         🚚 Follow-up
                     </button>
-                    <button onclick="window.gerarPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
+                    <button onclick="window.gerarPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
                         📄 Baixar PDF
                     </button>
                 </div>
 
                 <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
 
-                <!-- FILTRO DE DATA DESEJADA -->
-                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-tight">Desejada:</span>
-                    <input type="date" id="filtroDataInicio" class="text-sm border-none outline-none bg-transparent text-slate-700 cursor-pointer focus:text-orange-600 transition-colors">
-                    <span class="text-xs font-bold text-slate-400">até</span>
-                    <input type="date" id="filtroDataFim" class="text-sm border-none outline-none bg-transparent text-slate-700 cursor-pointer focus:text-orange-600 transition-colors">
+                <!-- FILTRO DE MÊS E ANO DE REFERÊNCIA -->
+                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg p-1">
+                    <select id="filtroMes" class="bg-transparent font-bold text-slate-700 text-xs outline-none cursor-pointer">
+                        <option value="todos">Todos os Meses</option>
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                    <select id="filtroAno" class="bg-transparent font-bold text-slate-700 text-xs outline-none cursor-pointer">
+                        <option value="todos">Todos os Anos</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                    </select>
                 </div>
 
+                <!-- FILTRO DE SEMANA -->
+                <select id="filtroSemana" class="filter-control font-semibold text-slate-700 text-xs">
+                    <option value="todas">Todas as Semanas</option>
+                    <option value="1ª Semana">1ª Semana</option>
+                    <option value="2ª Semana">2ª Semana</option>
+                    <option value="3ª Semana">3ª Semana</option>
+                    <option value="4ª Semana">4ª Semana</option>
+                    <option value="5ª Semana">5ª Semana</option>
+                </select>
+
                 <!-- BUSCA E STATUS -->
-                <input type="text" id="inputBusca" placeholder="Buscar nome, cód, nimbi..." class="filter-control flex-1 min-w-[200px]">
-                <select id="filtroStatus" class="filter-control min-w-[150px]">
-                    <option value="todos">Todos Status</option>
+                <input type="text" id="inputBusca" placeholder="Buscar produto, código, nimbi..." class="filter-control flex-1 min-w-[170px] text-xs">
+                
+                <select id="filtroStatus" class="filter-control min-w-[130px] text-xs font-semibold">
+                    <option value="todos">Todos os Estados</option>
                     <option value="pendentes">⚠️ Pendentes</option>
                     <option value="solicitacao">Solicitação</option>
                     <option value="liberado">Liberado</option>
@@ -82,12 +110,11 @@
                     <option value="atendido">Atendido</option>
                     <option value="parcial">Parcial</option>
                 </select>
-                
             </div>
         </div>
 
         <div id="listaCompras" class="grid gap-4">
-            <div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">Carregando registros...</div>
+            <div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">A carregar registos...</div>
         </div>
     </div>
 
@@ -95,7 +122,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CREDENCIAIS DA MECÂNICA
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
             authDomain: "mecanica-699bb.firebaseapp.com",
@@ -113,75 +139,76 @@
         let todosRegistros = [];
         let registrosFiltrados = []; 
 
+        const extrairAnoMes = (item) => {
+            const dataBase = item.dataDesejada || item.data || "";
+            if (dataBase && dataBase.includes("-")) {
+                const partes = dataBase.split("-");
+                return { ano: partes[0], mes: partes[1] };
+            }
+            return { ano: "", mes: "" };
+        };
+
         const renderizarLista = () => {
             const container = document.getElementById('listaCompras');
             const busca = document.getElementById('inputBusca').value.toLowerCase();
             const statusFiltro = document.getElementById('filtroStatus').value;
-            
-            // Valores do Filtro de Data
-            const dInicio = document.getElementById('filtroDataInicio').value;
-            const dFim = document.getElementById('filtroDataFim').value;
+            const semanaFiltro = document.getElementById('filtroSemana').value;
+            const mesFiltro = document.getElementById('filtroMes').value;
+            const anoFiltro = document.getElementById('filtroAno').value;
 
             registrosFiltrados = todosRegistros.filter(item => {
                 const nome = item.nome?.toLowerCase() || "";
                 const codigo = item.codigo?.toLowerCase() || "";
                 const nimbi = item.codigoNimbi?.toLowerCase() || "";
                 const status = item.status || "";
+                const semana = item.semanaMes || "";
                 
-                // Filtro de Texto
                 const matchesBusca = nome.includes(busca) || codigo.includes(busca) || nimbi.includes(busca);
                 
-                // Filtro de Status
                 const matchesStatus = 
                     statusFiltro === "todos" || 
                     status === statusFiltro ||
                     (statusFiltro === "pendentes" && (status === "pedido" || status === "parcial"));
 
-                // Filtro de Data Desejada
-                let matchesData = true;
-                if (dInicio || dFim) {
-                    if (!item.dataDesejada) {
-                        matchesData = false; // Ignorar quem não tem data se o filtro estiver ativo
-                    } else {
-                        if (dInicio && item.dataDesejada < dInicio) matchesData = false;
-                        if (dFim && item.dataDesejada > dFim) matchesData = false;
-                    }
-                }
+                const matchesSemana = semanaFiltro === "todas" || semana === semanaFiltro;
 
-                return matchesBusca && matchesStatus && matchesData;
+                const { ano, mes } = extrairAnoMes(item);
+                const matchesMes = mesFiltro === "todos" || mes === mesFiltro;
+                const matchesAno = anoFiltro === "todos" || ano === anoFiltro;
+
+                return matchesBusca && matchesStatus && matchesSemana && matchesMes && matchesAno;
             });
 
             if (registrosFiltrados.length === 0) {
-                container.innerHTML = `<div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">Nenhum registro encontrado</div>`;
+                container.innerHTML = `<div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">Nenhum registo encontrado</div>`;
                 return;
             }
 
             container.innerHTML = "";
             registrosFiltrados.forEach(item => {
                 const statusClass = `status-${item.status}`;
-                const nimbiDisplay = item.codigoNimbi ? `<span class="text-purple-500 ml-2">| Nimbi: ${item.codigoNimbi}</span>` : '';
+                const nimbiDisplay = item.codigoNimbi ? `<span class="text-purple-600 font-bold ml-2">| Nimbi: ${item.codigoNimbi}</span>` : '';
+                const origemDisplay = item.origem ? `<span class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-bold uppercase ml-2">${item.origem}</span>` : '';
 
                 let infoFalta = '';
                 if (item.status === 'parcial') {
                     const total = parseFloat(item.quantidade) || 0;
                     const recebido = parseFloat(item.qtdRecebida) || 0;
                     const falta = total - recebido;
-                    
                     infoFalta = `
                         <div class="text-[10px] font-bold text-red-600 mt-1 bg-red-50 p-1.5 rounded text-center border border-red-100 uppercase tracking-tighter">
                             Falta chegar: ${falta > 0 ? falta : 0}
-                        </div>
-                    `;
+                        </div>`;
                 }
 
                 const inputParcialDisplay = item.status === 'parcial' 
                     ? `
                     <div class="w-32 flex flex-col justify-start">
                         <input type="number" class="obs-input bg-purple-50 border-purple-200 text-purple-700 font-semibold text-center" 
-                            placeholder="Qtd chegou" 
+                            placeholder="Qtd entregue" 
                             value="${item.qtdRecebida || ''}" 
-                            onchange="window.atualizarQtdRecebida('${item.id}', this.value)"
-                            title="Informe a quantidade que já foi entregue">
+                            onchange="window.atualizarQtdRecebida('${item.id}', this.value)" 
+                            title="Informe a quantidade já entregue">
                         ${infoFalta}
                     </div>` 
                     : '';
@@ -192,14 +219,13 @@
                     <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
                         <div class="flex-1 min-w-[200px]">
                             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                                Cód: ${item.codigo || 'S/C'} ${nimbiDisplay}
+                                Cód: ${item.codigo || 'S/C'} ${nimbiDisplay} ${origemDisplay}
                             </div>
                             <h3 class="text-lg font-bold text-slate-800 leading-tight">${item.nome}</h3>
                             <div class="text-[11px] font-bold text-orange-500 uppercase mt-1">${item.local || 'Geral'}</div>
                         </div>
                         
-                        <!-- GRID ATUALIZADO: Apenas Data Desejada (4 Colunas) -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center items-center">
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center items-center">
                             <div>
                                 <div class="text-[9px] font-black text-slate-300 uppercase">Qtd</div>
                                 <div class="font-bold text-slate-700">${item.quantidade}</div>
@@ -208,18 +234,32 @@
                                 <div class="text-[9px] font-black text-slate-300 uppercase">Total</div>
                                 <div class="font-bold text-green-600">R$ ${parseFloat(item.valorTotal || 0).toFixed(2)}</div>
                             </div>
+
+                            <!-- CAMPO: Semana do Mês -->
+                            <div class="bg-emerald-50 p-1 rounded border border-emerald-100">
+                                <div class="text-[9px] font-black text-emerald-700 uppercase">Semana</div>
+                                <select onchange="window.atualizarSemana('${item.id}', this.value)"
+                                    class="text-[10px] font-bold text-emerald-800 bg-transparent outline-none w-full text-center cursor-pointer">
+                                    <option value="" ${!item.semanaMes ? 'selected' : ''}>-</option>
+                                    <option value="1ª Semana" ${item.semanaMes === '1ª Semana' ? 'selected' : ''}>1ª Sem.</option>
+                                    <option value="2ª Semana" ${item.semanaMes === '2ª Semana' ? 'selected' : ''}>2ª Sem.</option>
+                                    <option value="3ª Semana" ${item.semanaMes === '3ª Semana' ? 'selected' : ''}>3ª Sem.</option>
+                                    <option value="4ª Semana" ${item.semanaMes === '4ª Semana' ? 'selected' : ''}>4ª Sem.</option>
+                                    <option value="5ª Semana" ${item.semanaMes === '5ª Semana' ? 'selected' : ''}>5ª Sem.</option>
+                                </select>
+                            </div>
                             
-                            <!-- CAMPO ÚNICO: Data Desejada -->
-                            <div class="bg-slate-50 p-1.5 rounded border border-slate-100">
+                            <!-- CAMPO: Data Desejada -->
+                            <div class="bg-slate-50 p-1 rounded border border-slate-100">
                                 <div class="text-[9px] font-black text-orange-500 uppercase">Desejada</div>
                                 <input type="date" value="${item.dataDesejada || ''}" 
                                     onchange="window.atualizarDataDesejada('${item.id}', this.value)" 
-                                    class="text-[11px] font-bold text-slate-700 bg-transparent outline-none w-full text-center cursor-pointer hover:text-orange-500 transition-colors">
+                                    class="text-[10px] font-bold text-slate-700 bg-transparent outline-none w-full text-center cursor-pointer hover:text-orange-500 transition-colors">
                             </div>
 
-                            <div class="col-span-2 sm:col-span-1">
+                            <div>
                                 <select onchange="window.atualizarStatus('${item.id}', this.value)" 
-                                    class="text-[10px] font-black uppercase px-3 py-2 rounded-lg outline-none cursor-pointer transition-colors w-full ${statusClass}">
+                                    class="text-[10px] font-black uppercase px-2 py-2 rounded-lg outline-none cursor-pointer transition-colors w-full ${statusClass}">
                                     <option value="solicitacao" ${item.status === 'solicitacao' ? 'selected' : ''}>Solicitação</option>
                                     <option value="liberado" ${item.status === 'liberado' ? 'selected' : ''}>Liberado</option>
                                     <option value="pedido" ${item.status === 'pedido' ? 'selected' : ''}>Pedido Gerado</option>
@@ -239,7 +279,7 @@
                                 value="${item.observacao || ''}" 
                                 onchange="window.atualizarObs('${item.id}', this.value)">
                         </div>
-                        <button onclick="window.excluir('${item.id}')" class="p-2 text-slate-300 hover:text-red-500 transition-colors mt-1">
+                        <button onclick="window.excluir('${item.id}')" class="p-2 text-slate-300 hover:text-red-500 transition-colors mt-1" title="Eliminar Registo">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -255,26 +295,17 @@
             const doc = new jsPDF('landscape');
 
             const filtroAtual = document.getElementById('filtroStatus').options[document.getElementById('filtroStatus').selectedIndex].text;
-            
-            const dInicio = document.getElementById('filtroDataInicio').value;
-            const dFim = document.getElementById('filtroDataFim').value;
-            
-            let textoData = "";
-            if (dInicio || dFim) {
-                const formataBr = dataIso => dataIso.split('-').reverse().join('/');
-                if (dInicio && dFim) textoData = ` | Período Desejado: ${formataBr(dInicio)} a ${formataBr(dFim)}`;
-                else if (dInicio) textoData = ` | Período Desejado: A partir de ${formataBr(dInicio)}`;
-                else if (dFim) textoData = ` | Período Desejado: Até ${formataBr(dFim)}`;
-            }
+            const filtroSemana = document.getElementById('filtroSemana').options[document.getElementById('filtroSemana').selectedIndex].text;
+            const filtroMes = document.getElementById('filtroMes').options[document.getElementById('filtroMes').selectedIndex].text;
+            const filtroAno = document.getElementById('filtroAno').options[document.getElementById('filtroAno').selectedIndex].text;
 
-            doc.setFontSize(14);
-            doc.text(`Relatório de Compras Mecânica - Filtro: ${filtroAtual}${textoData}`, 14, 15);
+            doc.setFontSize(13);
+            doc.text(`Relatório de Compras - Filtros: ${filtroAtual} | ${filtroMes}/${filtroAno} (${filtroSemana})`, 14, 15);
             
             doc.setFontSize(9);
             doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
 
-            // Removida "Previsão" - Apenas "Desejada" mantida
-            const colunas = [["Cód / Nimbi", "Material", "Local", "Status", "Desejada", "Qtd Total", "Chegou", "Falta", "Valor (R$)"]];
+            const colunas = [["Cód / Nimbi", "Material", "Local", "Semana", "Estado", "Desejada", "Qtd Total", "Chegou", "Falta", "Valor (R$)"]];
             
             const linhas = registrosFiltrados.map(item => {
                 const cod = item.codigo || 'S/C';
@@ -291,15 +322,13 @@
                 }
 
                 const statusFormatado = item.status.charAt(0).toUpperCase() + item.status.slice(1);
-                
-                const dataDesFormatada = item.dataDesejada
-                    ? item.dataDesejada.split('-').reverse().join('/') 
-                    : '-';
+                const dataDesFormatada = item.dataDesejada ? item.dataDesejada.split('-').reverse().join('/') : '-';
 
                 return [
                     cod + nimbi,
                     item.nome,
                     item.local || 'Geral',
+                    item.semanaMes || '-',
                     statusFormatado,
                     dataDesFormatada,
                     item.quantidade || '0',
@@ -313,19 +342,21 @@
                 head: colunas,
                 body: linhas,
                 startY: 28,
-                styles: { fontSize: 8.5, cellPadding: 3 },
-                headStyles: { fillColor: [249, 115, 22] }, // Cor Laranja Mecânica
+                styles: { fontSize: 8, cellPadding: 2.5 },
+                headStyles: { fillColor: [249, 115, 22] },
                 alternateRowStyles: { fillColor: [248, 250, 252] },
                 columnStyles: {
-                    4: { halign: 'center', fontStyle: 'bold' }, // Desejada
-                    5: { halign: 'center' }, // Qtd Total
-                    6: { halign: 'center' }, // Chegou
-                    7: { halign: 'center', textColor: [220, 38, 38] }, // Falta
-                    8: { halign: 'right' }   // Valor Total
+                    3: { halign: 'center', fontStyle: 'bold' },
+                    4: { halign: 'center' },
+                    5: { halign: 'center' },
+                    6: { halign: 'center' },
+                    7: { halign: 'center' },
+                    8: { halign: 'center', textColor: [220, 38, 38] },
+                    9: { halign: 'right' }
                 }
             });
 
-            doc.save(`Relatorio_Compras_Mecanica_${new Date().getTime()}.pdf`);
+            doc.save(`Relatorio_Compras_${new Date().getTime()}.pdf`);
         };
 
         onSnapshot(query(comprasRef, orderBy("dataCriacao", "desc")), (snap) => {
@@ -335,17 +366,20 @@
 
         document.getElementById('inputBusca').addEventListener('input', renderizarLista);
         document.getElementById('filtroStatus').addEventListener('change', renderizarLista);
-        
-        // Listeners para os campos de data
-        document.getElementById('filtroDataInicio').addEventListener('change', renderizarLista);
-        document.getElementById('filtroDataFim').addEventListener('change', renderizarLista);
+        document.getElementById('filtroSemana').addEventListener('change', renderizarLista);
+        document.getElementById('filtroMes').addEventListener('change', renderizarLista);
+        document.getElementById('filtroAno').addEventListener('change', renderizarLista);
         
         document.getElementById('btnPendencias').addEventListener('click', () => {
             document.getElementById('filtroStatus').value = 'pendentes';
             renderizarLista();
         });
 
-        // NOVA FUNÇÃO GLOBAL para salvar data Desejada
+        window.atualizarSemana = async (id, semana) => {
+            try { await updateDoc(doc(db, "compras", id), { semanaMes: semana }); } 
+            catch (e) { console.error("Erro ao atualizar semana:", e); }
+        };
+
         window.atualizarDataDesejada = async (id, dataISO) => {
             try { await updateDoc(doc(db, "compras", id), { dataDesejada: dataISO }); } 
             catch (e) { console.error("Erro ao atualizar data desejada:", e); }
@@ -367,9 +401,9 @@
         };
 
         window.excluir = async (id) => {
-            if(confirm("Deseja excluir permanentemente este registro?")) {
+            if(confirm("Deseja eliminar permanentemente este registo?")) {
                 try { await deleteDoc(doc(db, "compras", id)); } 
-                catch (e) { console.error("Erro ao excluir:", e); }
+                catch (e) { console.error("Erro ao eliminar:", e); }
             }
         };
     </script>

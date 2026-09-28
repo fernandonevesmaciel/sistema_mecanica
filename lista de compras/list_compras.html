@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        :root { --primary: #f97316; --border: #e2e8f0; } /* Cor Laranja para Mecânica */
+        :root { --primary: #f97316; --border: #e2e8f0; } /* Laranja Mecânica */
         .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; box-sizing: border-box; z-index: 1000; }
         body { padding-top: 85px; }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
@@ -80,7 +80,7 @@
         import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// ================= CONFIGURAÇÕES FIREBASE (MECÂNICA) =================
+        // ================= CONFIGURAÇÕES FIREBASE (MECÂNICA) =================
         const firebaseConfigMecanica = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
             authDomain: "mecanica-699bb.firebaseapp.com",
@@ -99,12 +99,10 @@
             appId: "1:456815528430:web:4cf873dc8071c9a2bbe6ff"
         };
 
-        // Inicializa o app primário (Mecânica)
         const app = initializeApp(firebaseConfigMecanica);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Inicializa o app secundário (Elétrica para integrações se admin)
         const appEletrica = initializeApp(firebaseConfigEletrica, "appEletrica");
         const dbEletrica = getFirestore(appEletrica);
 
@@ -117,7 +115,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user && ADMIN_IDS.includes(String(user.uid).trim())) {
                 isUserAdmin = true;
-                // Libera o input de meta se o admin estiver logado
                 const inputMeta = document.getElementById('limiteOrcamento');
                 if (inputMeta) inputMeta.removeAttribute('disabled');
             } else {
@@ -132,7 +129,7 @@
         let periodoId = "";
         let somaTotalGlobal = 0;
         let valorLimiteDesteMes = 0;
-        let editandoId = null;
+        let editandoItemId = null;
 
         async function init() {
             const snap = await getDocs(collection(db, "produtos"));
@@ -164,12 +161,15 @@
             periodoId = `${mes}-${ano}`;
             const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
             document.getElementById('labelPeriodo').innerText = `Orçamento: ${mesNome} / ${ano}`;
-            editandoId = null;
+            editandoItemId = null;
 
             onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
-                    carrinhoAtual = dados.itens || [];
+                    carrinhoAtual = (dados.itens || []).map((it, idx) => ({
+                        ...it,
+                        itemId: it.itemId || `${it.id}_${idx}_${Date.now()}`
+                    }));
                     valorLimiteDesteMes = dados.meta !== undefined ? dados.meta : 0;
                 } else {
                     carrinhoAtual = []; valorLimiteDesteMes = 0;
@@ -187,14 +187,22 @@
             const lista = document.getElementById('listaSugestoes');
             if (termo.length < 2) { lista.innerHTML = ""; return; }
             const filtrados = todosProdutos.filter(p => (p.codigo && String(p.codigo).includes(termo)) || (p.nome && p.nome.toLowerCase().includes(termo.toLowerCase())));
+            
             lista.innerHTML = filtrados.map(p => {
-                const jaEstaNoCarrinho = carrinhoAtual.some(item => item.id === p.id);
                 return `
                 <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-orange-200">
                     <p class="font-bold text-slate-800 text-sm leading-tight">${p.nome}</p>
                     <p class="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-tighter">Cód: ${p.codigo} | Unit: R$ ${p.valor}</p>
                     
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-1">
+                        <select id="semana-${p.id}" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400" title="Semana do Mês">
+                            <option value="">Semana (Op.)</option>
+                            <option value="1ª Semana">1ª Semana</option>
+                            <option value="2ª Semana">2ª Semana</option>
+                            <option value="3ª Semana">3ª Semana</option>
+                            <option value="4ª Semana">4ª Semana</option>
+                            <option value="5ª Semana">5ª Semana</option>
+                        </select>
                         <input type="date" id="dataDesejada-${p.id}" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400" title="Data Desejada">
                         <input type="text" id="local-${p.id}" placeholder="Local (ex: Setor A)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
                         <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
@@ -203,7 +211,7 @@
 
                     <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
                         <input type="number" id="qtd-${p.id}" value="1" min="1" class="w-16 p-2 bg-slate-100 border rounded-lg text-sm font-bold text-center outline-none">
-                        <button onclick="${jaEstaNoCarrinho ? `remover('${p.id}')` : `adicionar('${p.id}')`}" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md ${jaEstaNoCarrinho ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100'}">${jaEstaNoCarrinho ? '✕ Remover' : '＋ Adicionar'}</button>
+                        <button onclick="adicionar('${p.id}')" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100">＋ Adicionar à Lista</button>
                     </div>
                 </div>`;
             }).join('');
@@ -212,66 +220,83 @@
         window.adicionar = async (id) => {
             const prod = todosProdutos.find(p => p.id === id);
             const qtd = parseInt(document.getElementById(`qtd-${id}`).value) || 1;
+            const semana = document.getElementById(`semana-${id}`).value || "";
             const dataDes = document.getElementById(`dataDesejada-${id}`).value || "";
             const localUso = document.getElementById(`local-${id}`).value || "Geral";
             const codNimbi = document.getElementById(`nimbi-${id}`).value || "";
             const codMov = document.getElementById(`movimentacao-${id}`).value || "";
-            
             const valorUnit = parseFloat(String(prod.valor).replace(',', '.'));
             
-            if (!carrinhoAtual.some(i => i.id === id)) {
-                const novaLista = [...carrinhoAtual, { ...prod, quantidade: qtd, dataDesejada: dataDes, local: localUso, codigoNimbi: codNimbi, codigoMovimentacao: codMov }];
-                await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+            // Cada adição gera um itemId único para permitir o mesmo produto repetido com Nimbi ou semana diferente
+            const novoItem = {
+                ...prod,
+                itemId: Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+                quantidade: qtd,
+                semanaMes: semana,
+                dataDesejada: dataDes,
+                local: localUso,
+                codigoNimbi: codNimbi,
+                codigoMovimentacao: codMov
+            };
 
-                await addDoc(collection(db, "compras"), {
-                    nome: prod.nome,
-                    codigo: prod.codigo || "S/C",
-                    codigoNimbi: codNimbi,
-                    codigoMovimentacao: codMov,
-                    local: localUso,
-                    quantidade: qtd,
-                    dataDesejada: dataDes,
-                    valorUnitario: valorUnit,
-                    valorTotal: valorUnit * qtd,
-                    data: new Date().toISOString().split('T')[0],
-                    status: "solicitacao",
-                    observacao: `Nimbi: ${codNimbi} | Mov: ${codMov}`,
-                    dataCriacao: new Date()
-                });
-            }
+            const novaLista = [...carrinhoAtual, novoItem];
+            await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+
+            await addDoc(collection(db, "compras"), {
+                nome: prod.nome,
+                codigo: prod.codigo || "S/C",
+                codigoNimbi: codNimbi,
+                codigoMovimentacao: codMov,
+                local: localUso,
+                origem: "Mecânica",
+                semanaMes: semana,
+                quantidade: qtd,
+                dataDesejada: dataDes,
+                valorUnitario: valorUnit,
+                valorTotal: valorUnit * qtd,
+                data: new Date().toISOString().split('T')[0],
+                status: "solicitacao",
+                observacao: `Nimbi: ${codNimbi} | Mov: ${codMov}${semana ? ' | ' + semana : ''}`,
+                dataCriacao: new Date()
+            });
+
+            const elNimbi = document.getElementById(`nimbi-${id}`);
+            if (elNimbi) elNimbi.value = "";
         };
 
-        window.remover = async (id) => {
-            const novaLista = carrinhoAtual.filter(i => i.id !== id);
+        window.remover = async (itemId) => {
+            const novaLista = carrinhoAtual.filter(i => (i.itemId || i.id) !== itemId);
             await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
         };
 
-        window.editar = (id) => {
-            editandoId = id;
+        window.editar = (itemId) => {
+            editandoItemId = itemId;
             renderizarCarrinho();
         };
 
         window.cancelarEdicao = () => {
-            editandoId = null;
+            editandoItemId = null;
             renderizarCarrinho();
         };
 
-        window.salvarEdicao = async (id) => {
-            const index = carrinhoAtual.findIndex(i => i.id === id);
+        window.salvarEdicao = async (itemId) => {
+            const index = carrinhoAtual.findIndex(i => (i.itemId || i.id) === itemId);
             if (index !== -1) {
-                const novaQtd = parseInt(document.getElementById(`edit-qtd-${id}`).value) || 1;
-                const novaDataDes = document.getElementById(`edit-dataDes-${id}`).value || "";
-                const novoLocal = document.getElementById(`edit-local-${id}`).value || "Geral";
-                const novoNimbi = document.getElementById(`edit-nimbi-${id}`).value || "";
-                const novoMov = document.getElementById(`edit-mov-${id}`).value || "";
+                const novaQtd = parseInt(document.getElementById(`edit-qtd-${itemId}`).value) || 1;
+                const novaSemana = document.getElementById(`edit-semana-${itemId}`).value || "";
+                const novaDataDes = document.getElementById(`edit-dataDes-${itemId}`).value || "";
+                const novoLocal = document.getElementById(`edit-local-${itemId}`).value || "Geral";
+                const novoNimbi = document.getElementById(`edit-nimbi-${itemId}`).value || "";
+                const novoMov = document.getElementById(`edit-mov-${itemId}`).value || "";
 
                 carrinhoAtual[index].quantidade = novaQtd;
+                carrinhoAtual[index].semanaMes = novaSemana;
                 carrinhoAtual[index].dataDesejada = novaDataDes;
                 carrinhoAtual[index].local = novoLocal;
                 carrinhoAtual[index].codigoNimbi = novoNimbi;
                 carrinhoAtual[index].codigoMovimentacao = novoMov;
 
-                editandoId = null;
+                editandoItemId = null;
                 renderizarCarrinho();
 
                 await setDoc(doc(db, "listas_mensais", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
@@ -299,7 +324,6 @@
                         const dadosEle = docSnap.data();
                         const itensEle = dadosEle.itens || [];
                         metaEletrica = dadosEle.meta || 0;
-                        
                         itensEle.forEach(i => i.origem = "Elétrica");
                         itensParaRelatorio = [...itensParaRelatorio, ...itensEle];
                     }
@@ -313,9 +337,7 @@
             
             itensParaRelatorio.forEach(item => {
                 const nimbi = (item.codigoNimbi || "").trim() || "Sem Código Nimbi";
-                if (!gruposNimbi[nimbi]) {
-                    gruposNimbi[nimbi] = { itens: [], subtotal: 0 };
-                }
+                if (!gruposNimbi[nimbi]) gruposNimbi[nimbi] = { itens: [], subtotal: 0 };
                 gruposNimbi[nimbi].itens.push(item);
                 
                 const vUnit = parseFloat(String(item.valor).replace(',', '.')) || 0;
@@ -341,16 +363,11 @@
 
             let currentY = isUserAdmin ? 25 : 22;
             let gastoTotalSomado = 0;
-
             const chavesOrdenadas = Object.keys(gruposNimbi).sort();
 
             for (const nimbi of chavesOrdenadas) {
                 const grupo = gruposNimbi[nimbi];
-
-                if (currentY > 260) {
-                    docPdf.addPage();
-                    currentY = 20;
-                }
+                if (currentY > 260) { docPdf.addPage(); currentY = 20; }
 
                 docPdf.setFontSize(11);
                 docPdf.setFont(undefined, 'bold');
@@ -359,7 +376,7 @@
                 docPdf.setTextColor(0, 0, 0); 
                 currentY += 5;
 
-                const colunas = ["Cód", "Mov", "Produto", "Local", "Qtd", "Unit", "Total"];
+                const colunas = ["Cód", "Mov", "Produto", "Semana", "Local", "Qtd", "Unit", "Total"];
                 if (isUserAdmin) colunas.push("Origem");
 
                 const linhas = grupo.itens.map(item => {
@@ -370,12 +387,12 @@
                         item.codigo || "-", 
                         item.codigoMovimentacao || "-", 
                         item.nome, 
+                        item.semanaMes || "-",
                         item.local || "Geral", 
-                        item.quantidade,
+                        item.quantidade, 
                         `R$ ${vUnit.toFixed(2).replace('.', ',')}`, 
                         `R$ ${totalLinha.toFixed(2).replace('.', ',')}`
                     ];
-                    
                     if (isUserAdmin) row.push(item.origem);
                     return row;
                 });
@@ -391,7 +408,6 @@
                 });
 
                 currentY = docPdf.lastAutoTable.finalY + 6;
-                
                 docPdf.setFontSize(10);
                 docPdf.setFont(undefined, 'bold');
                 docPdf.text(`Cód Nimbi ${nimbi} Valor R$ ${grupo.subtotal.toFixed(2).replace('.', ',')}`, 14, currentY);
@@ -401,19 +417,14 @@
             }
 
             const chavesMov = Object.keys(totaisMovimentacao).sort();
-            
             let alturaResumoBase = isUserAdmin ? 35 : 20; 
             let alturaSessaoMovimentos = 15 + (chavesMov.length * 5); 
             let alturaTotalBox = alturaResumoBase + alturaSessaoMovimentos;
 
-            if (currentY + alturaTotalBox > 280) {
-                docPdf.addPage();
-                currentY = 20;
-            }
+            if (currentY + alturaTotalBox > 280) { docPdf.addPage(); currentY = 20; }
 
             docPdf.setFillColor(241, 245, 249); 
             docPdf.rect(14, currentY - 5, 180, alturaTotalBox, 'F');
-            
             docPdf.setFontSize(11);
             docPdf.setFont(undefined, 'bold');
             docPdf.text(`RESUMO GERAL DO MÊS`, 18, currentY + 2);
@@ -429,28 +440,24 @@
                 currentY += 5;
                 docPdf.text(`Meta (Elétrica): R$ ${metaEletrica.toFixed(2).replace('.', ',')}`, 18, currentY);
                 currentY += 5;
-                const metaUnificada = valorLimiteDesteMes + metaEletrica;
                 docPdf.setFont(undefined, 'bold');
-                docPdf.text(`Meta Total Unificada: R$ ${metaUnificada.toFixed(2).replace('.', ',')}`, 18, currentY);
+                docPdf.text(`Meta Total Unificada: R$ ${(valorLimiteDesteMes + metaEletrica).toFixed(2).replace('.', ',')}`, 18, currentY);
             }
 
             currentY += 10;
             docPdf.setFontSize(10);
             docPdf.setFont(undefined, 'bold');
             docPdf.text(`TOTAL GASTO POR CÓDIGO DE MOVIMENTAÇÃO:`, 18, currentY);
-            
             currentY += 6;
             docPdf.setFontSize(9);
             docPdf.setFont(undefined, 'normal');
             
             chavesMov.forEach(mov => {
-                const totalMovStr = `R$ ${totaisMovimentacao[mov].toFixed(2).replace('.', ',')}`;
-                docPdf.text(`- Cód Mov: ${mov} -> ${totalMovStr}`, 18, currentY);
+                docPdf.text(`- Cód Mov: ${mov} -> R$ ${totaisMovimentacao[mov].toFixed(2).replace('.', ',')}`, 18, currentY);
                 currentY += 5;
             });
 
             docPdf.save(`Orcamento_Mecanica_${mesRef}_${anoRef}.pdf`);
-            
             btn.innerText = textoOriginal;
         };
 
@@ -466,6 +473,7 @@
                     "Código": item.codigo || "S/C",
                     "Cód. Nimbi": item.codigoNimbi || "",
                     "Cód. Mov.": item.codigoMovimentacao || "",
+                    "Semana de Compra": item.semanaMes || "",
                     "Data Desejada": item.dataDesejada || "",
                     "Descrição do Produto": item.nome,
                     "Local de Aplicação": item.local || "Geral",
@@ -477,11 +485,7 @@
 
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(dadosExcel);
-
-            ws['!cols'] = [
-                { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }
-            ];
-
+            ws['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }];
             XLSX.utils.book_append_sheet(wb, ws, "Orcamento");
             XLSX.writeFile(wb, `Orcamento_Mecanica_${mesRef}_${anoRef}.xlsx`);
         };
@@ -496,27 +500,37 @@
                 return;
             }
             ui.innerHTML = carrinhoAtual.map(p => {
+                const itemChave = p.itemId || p.id;
                 const totalLinha = (parseFloat(String(p.valor).replace(',', '.')) || 0) * (p.quantidade || 1);
                 somaTotalGlobal += totalLinha;
                 
-                if (editandoId === p.id) {
+                if (editandoItemId === itemChave) {
                     return `
                     <li class="p-4 bg-orange-50 border-b border-orange-100 flex flex-col gap-2">
                         <p class="text-sm font-bold text-orange-800 leading-tight">Editando: ${p.nome}</p>
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-1">
-                            <input type="date" id="edit-dataDes-${p.id}" value="${p.dataDesejada || ''}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400" title="Data Desejada">
-                            <input type="text" id="edit-local-${p.id}" value="${p.local || ''}" placeholder="Local" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="text" id="edit-nimbi-${p.id}" value="${p.codigoNimbi || ''}" placeholder="Cód. Nimbi" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="text" id="edit-mov-${p.id}" value="${p.codigoMovimentacao || ''}" placeholder="Cód. Mov." class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="number" id="edit-qtd-${p.id}" value="${p.quantidade}" min="1" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-center outline-none focus:ring-1 focus:ring-orange-400">
+                        <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mt-1">
+                            <select id="edit-semana-${itemChave}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                                <option value="" ${!p.semanaMes ? 'selected' : ''}>Sem Semana</option>
+                                <option value="1ª Semana" ${p.semanaMes === '1ª Semana' ? 'selected' : ''}>1ª Semana</option>
+                                <option value="2ª Semana" ${p.semanaMes === '2ª Semana' ? 'selected' : ''}>2ª Semana</option>
+                                <option value="3ª Semana" ${p.semanaMes === '3ª Semana' ? 'selected' : ''}>3ª Semana</option>
+                                <option value="4ª Semana" ${p.semanaMes === '4ª Semana' ? 'selected' : ''}>4ª Semana</option>
+                                <option value="5ª Semana" ${p.semanaMes === '5ª Semana' ? 'selected' : ''}>5ª Semana</option>
+                            </select>
+                            <input type="date" id="edit-dataDes-${itemChave}" value="${p.dataDesejada || ''}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                            <input type="text" id="edit-local-${itemChave}" value="${p.local || ''}" placeholder="Local" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                            <input type="text" id="edit-nimbi-${itemChave}" value="${p.codigoNimbi || ''}" placeholder="Cód. Nimbi" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                            <input type="text" id="edit-mov-${itemChave}" value="${p.codigoMovimentacao || ''}" placeholder="Cód. Mov." class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
+                            <input type="number" id="edit-qtd-${itemChave}" value="${p.quantidade}" min="1" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-center outline-none focus:ring-1 focus:ring-orange-400">
                         </div>
                         <div class="flex justify-end gap-2 mt-2">
                             <button onclick="cancelarEdicao()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold rounded-lg uppercase transition-colors">Cancelar</button>
-                            <button onclick="salvarEdicao('${p.id}')" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold rounded-lg uppercase shadow-sm transition-colors">Salvar Alterações</button>
+                            <button onclick="salvarEdicao('${itemChave}')" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold rounded-lg uppercase shadow-sm transition-colors">Salvar Alterações</button>
                         </div>
                     </li>`;
                 }
 
+                const semanaHtml = p.semanaMes ? `<span class="text-[9px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-black uppercase border border-emerald-200">🗓️ ${p.semanaMes}</span>` : '';
                 const nimbiHtml = p.codigoNimbi ? `<span class="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold uppercase border border-purple-100">Nimbi: ${p.codigoNimbi}</span>` : '';
                 const movHtml = p.codigoMovimentacao ? `<span class="text-[9px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold uppercase border border-amber-100">Mov: ${p.codigoMovimentacao}</span>` : '';
                 const dataDesHtml = p.dataDesejada ? `<span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100">Para: ${p.dataDesejada.split('-').reverse().join('/')}</span>` : '';
@@ -529,6 +543,7 @@
                             <span class="text-[9px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300">Cód: ${p.codigo || 'S/C'}</span>
                             <p class="text-[10px] text-slate-400 font-black uppercase tracking-tight">${p.quantidade} un x R$ ${p.valor}</p>
                             <span class="text-[9px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase border border-orange-100">${p.local || 'Geral'}</span>
+                            ${semanaHtml}
                             ${dataDesHtml}
                             ${nimbiHtml}
                             ${movHtml}
@@ -537,8 +552,8 @@
                     <div class="flex items-center gap-4 shrink-0">
                         <span class="text-sm font-black text-slate-800 tracking-tighter">R$ ${totalLinha.toFixed(2).replace('.', ',')}</span>
                         <div class="flex gap-1 bg-slate-100 rounded-lg p-1">
-                            <button onclick="editar('${p.id}')" class="p-1.5 text-orange-500 hover:bg-orange-200 hover:text-orange-700 rounded-md font-bold text-xs transition-colors" title="Editar">✏️</button>
-                            <button onclick="remover('${p.id}')" class="p-1.5 text-red-400 hover:bg-red-200 hover:text-red-600 rounded-md font-bold text-xs transition-colors" title="Remover">✕</button>
+                            <button onclick="editar('${itemChave}')" class="p-1.5 text-orange-500 hover:bg-orange-200 hover:text-orange-700 rounded-md font-bold text-xs transition-colors" title="Editar">✏️</button>
+                            <button onclick="remover('${itemChave}')" class="p-1.5 text-red-400 hover:bg-red-200 hover:text-red-600 rounded-md font-bold text-xs transition-colors" title="Remover">✕</button>
                         </div>
                     </div>
                 </li>`;

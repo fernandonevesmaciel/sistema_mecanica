@@ -201,8 +201,9 @@
                         </div>`;
                 }
 
-                const inputParcialDisplay = item.status === 'parcial' 
-                    ? `
+                let inputDinamicoDisplay = '';
+                if (item.status === 'parcial') {
+                    inputDinamicoDisplay = `
                     <div class="w-32 flex flex-col justify-start">
                         <input type="number" class="obs-input bg-purple-50 border-purple-200 text-purple-700 font-semibold text-center" 
                             placeholder="Qtd entregue" 
@@ -210,8 +211,16 @@
                             onchange="window.atualizarQtdRecebida('${item.id}', this.value)" 
                             title="Informe a quantidade já entregue">
                         ${infoFalta}
-                    </div>` 
-                    : '';
+                    </div>`;
+                } else if (item.status === 'atendido') {
+                    inputDinamicoDisplay = `
+                    <div class="w-40 flex flex-col justify-start bg-emerald-50 p-1 rounded border border-emerald-100">
+                        <div class="text-[9px] font-black text-emerald-700 uppercase">Data Atendido</div>
+                        <input type="date" value="${item.dataAtendido || ''}" 
+                            onchange="window.atualizarDataAtendido('${item.id}', this.value)" 
+                            class="text-[10px] font-bold text-emerald-800 bg-transparent outline-none w-full text-center cursor-pointer">
+                    </div>`;
+                }
 
                 const card = document.createElement('div');
                 card.className = 'compra-card p-5';
@@ -272,7 +281,7 @@
                     </div>
 
                     <div class="flex gap-3 items-start">
-                        ${inputParcialDisplay}
+                        ${inputDinamicoDisplay}
                         <div class="flex-1">
                             <input type="text" class="obs-input bg-slate-50" 
                                 placeholder="Adicionar observação técnica..." 
@@ -305,24 +314,15 @@
             doc.setFontSize(9);
             doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
 
-            const colunas = [["Cód / Nimbi", "Material", "Local", "Semana", "Estado", "Desejada", "Qtd Total", "Chegou", "Falta", "Valor (R$)"]];
+            const colunas = [["Cód / Nimbi", "Material", "Local", "Semana", "Estado", "Desejada", "Atendido em", "Qtd Total", "Valor (R$)"]];
             
             const linhas = registrosFiltrados.map(item => {
                 const cod = item.codigo || 'S/C';
                 const nimbi = item.codigoNimbi ? `\nNimbi: ${item.codigoNimbi}` : '';
                 
-                let chegou = "-";
-                let falta = "-";
-                
-                if (item.status === 'parcial') {
-                    const t = parseFloat(item.quantidade) || 0;
-                    const r = parseFloat(item.qtdRecebida) || 0;
-                    chegou = r.toString();
-                    falta = (t - r).toString();
-                }
-
                 const statusFormatado = item.status.charAt(0).toUpperCase() + item.status.slice(1);
                 const dataDesFormatada = item.dataDesejada ? item.dataDesejada.split('-').reverse().join('/') : '-';
+                const dataAtendidoFormatada = item.dataAtendido ? item.dataAtendido.split('-').reverse().join('/') : '-';
 
                 return [
                     cod + nimbi,
@@ -331,9 +331,8 @@
                     item.semanaMes || '-',
                     statusFormatado,
                     dataDesFormatada,
+                    item.status === 'atendido' ? dataAtendidoFormatada : '-',
                     item.quantidade || '0',
-                    chegou,
-                    falta,
                     `R$ ${parseFloat(item.valorTotal || 0).toFixed(2)}`
                 ];
             });
@@ -349,10 +348,9 @@
                     3: { halign: 'center', fontStyle: 'bold' },
                     4: { halign: 'center' },
                     5: { halign: 'center' },
-                    6: { halign: 'center' },
+                    6: { halign: 'center', textColor: [22, 101, 52] },
                     7: { halign: 'center' },
-                    8: { halign: 'center', textColor: [220, 38, 38] },
-                    9: { halign: 'right' }
+                    8: { halign: 'right' }
                 }
             });
 
@@ -385,8 +383,17 @@
             catch (e) { console.error("Erro ao atualizar data desejada:", e); }
         };
 
+        window.atualizarDataAtendido = async (id, dataISO) => {
+            try { await updateDoc(doc(db, "compras", id), { dataAtendido: dataISO }); } 
+            catch (e) { console.error("Erro ao atualizar data de atendimento:", e); }
+        };
+
         window.atualizarStatus = async (id, novoStatus) => {
-            try { await updateDoc(doc(db, "compras", id), { status: novoStatus }); } 
+            try { 
+                const updateData = { status: novoStatus };
+                // Se alterar para diferente de atendido, limpa a data de atendimento opcionalmente (ou mantém se preferir)
+                await updateDoc(doc(db, "compras", id), updateData); 
+            } 
             catch (e) { console.error("Erro ao atualizar status:", e); }
         };
 

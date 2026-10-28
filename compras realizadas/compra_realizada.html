@@ -25,9 +25,12 @@
         .navbar { position: fixed; top: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-sizing: border-box; }
         .compra-card { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; transition: all 0.2s; }
         .compra-card:hover { border-color: #f97316; transform: translateY(-2px); }
-        .obs-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; }
+        .obs-input { width: 100%; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; }
         .obs-input:focus { border-color: #f97316; background: #fff; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
         
+        .ped-input { width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; outline: none; background: #fff; transition: all 0.2s; }
+        .ped-input:focus { border-color: #f97316; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15); }
+
         .filter-control { background: white; border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; }
         .filter-control:focus { border-color: #f97316; }
     </style>
@@ -43,7 +46,7 @@
         <div class="mb-8 flex flex-col justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">📦 Histórico de Compras Realizadas</h1>
-                <p class="text-slate-400 text-sm font-medium">Gestão de estado, filtros por mês/semana e observações em tempo real.</p>
+                <p class="text-slate-400 text-sm font-medium">Gestão de estado, controle de pedidos Nimbi/Maxxy e observações em tempo real.</p>
             </div>
 
             <!-- FILTROS E AÇÕES -->
@@ -98,7 +101,7 @@
                 </select>
 
                 <!-- BUSCA E STATUS -->
-                <input type="text" id="inputBusca" placeholder="Buscar produto, código, nimbi..." class="filter-control flex-1 min-w-[170px] text-xs">
+                <input type="text" id="inputBusca" placeholder="Buscar produto, código, pedidos Nimbi/Maxxy..." class="filter-control flex-1 min-w-[170px] text-xs">
                 
                 <select id="filtroStatus" class="filter-control min-w-[130px] text-xs font-semibold">
                     <option value="todos">Todos os Estados</option>
@@ -159,11 +162,17 @@
             registrosFiltrados = todosRegistros.filter(item => {
                 const nome = item.nome?.toLowerCase() || "";
                 const codigo = item.codigo?.toLowerCase() || "";
-                const nimbi = item.codigoNimbi?.toLowerCase() || "";
+                const codigoNimbi = item.codigoNimbi?.toLowerCase() || "";
+                const pedNimbi = (item.pedidoNimbi || "")?.toLowerCase();
+                const pedMaxxy = (item.pedidoMaxxy || "")?.toLowerCase();
                 const status = item.status || "";
                 const semana = item.semanaMes || "";
                 
-                const matchesBusca = nome.includes(busca) || codigo.includes(busca) || nimbi.includes(busca);
+                const matchesBusca = nome.includes(busca) || 
+                                     codigo.includes(busca) || 
+                                     codigoNimbi.includes(busca) ||
+                                     pedNimbi.includes(busca) || 
+                                     pedMaxxy.includes(busca);
                 
                 const matchesStatus = 
                     statusFiltro === "todos" || 
@@ -187,6 +196,7 @@
             container.innerHTML = "";
             registrosFiltrados.forEach(item => {
                 const statusClass = `status-${item.status}`;
+                // Mantém intacto o Código Nimbi original do cadastro do item
                 const nimbiDisplay = item.codigoNimbi ? `<span class="text-purple-600 font-bold ml-2">| Nimbi: ${item.codigoNimbi}</span>` : '';
                 const origemDisplay = item.origem ? `<span class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-bold uppercase ml-2">${item.origem}</span>` : '';
 
@@ -225,7 +235,7 @@
                 const card = document.createElement('div');
                 card.className = 'compra-card p-5';
                 card.innerHTML = `
-                    <div class="flex flex-wrap justify-between items-start gap-4 mb-4">
+                    <div class="flex flex-wrap justify-between items-start gap-4 mb-3">
                         <div class="flex-1 min-w-[200px]">
                             <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                                 Cód: ${item.codigo || 'S/C'} ${nimbiDisplay} ${origemDisplay}
@@ -280,6 +290,24 @@
                         </div>
                     </div>
 
+                    <!-- LINHA ESPECÍFICA: NÚMEROS DE PEDIDO GERADO (NIMBI / MAXXY) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-purple-700 whitespace-nowrap">📦 Pedido Nimbi:</span>
+                            <input type="text" class="ped-input text-purple-800 border-purple-200" 
+                                placeholder="Nº Pedido Nimbi gerado..." 
+                                value="${item.pedidoNimbi || ''}" 
+                                onchange="window.atualizarPedidoNimbi('${item.id}', this.value)">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-blue-700 whitespace-nowrap">🏢 Pedido Maxxy:</span>
+                            <input type="text" class="ped-input text-blue-800 border-blue-200" 
+                                placeholder="Nº Pedido Maxxy gerado..." 
+                                value="${item.pedidoMaxxy || ''}" 
+                                onchange="window.atualizarPedidoMaxxy('${item.id}', this.value)">
+                        </div>
+                    </div>
+
                     <div class="flex gap-3 items-start">
                         ${inputDinamicoDisplay}
                         <div class="flex-1">
@@ -314,18 +342,20 @@
             doc.setFontSize(9);
             doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
 
-            const colunas = [["Cód / Nimbi", "Material", "Local", "Semana", "Estado", "Desejada", "Atendido em", "Qtd Total", "Valor (R$)"]];
+            const colunas = [["Cód / Pedidos", "Material", "Local", "Semana", "Estado", "Desejada", "Atendido em", "Qtd Total", "Valor (R$)"]];
             
             const linhas = registrosFiltrados.map(item => {
-                const cod = item.codigo || 'S/C';
-                const nimbi = item.codigoNimbi ? `\nNimbi: ${item.codigoNimbi}` : '';
+                let infoCodigos = `Cód: ${item.codigo || 'S/C'}`;
+                if (item.codigoNimbi) infoCodigos += `\nCód. Nimbi: ${item.codigoNimbi}`;
+                if (item.pedidoNimbi) infoCodigos += `\nPed. Nimbi: ${item.pedidoNimbi}`;
+                if (item.pedidoMaxxy) infoCodigos += `\nPed. Maxxy: ${item.pedidoMaxxy}`;
                 
                 const statusFormatado = item.status.charAt(0).toUpperCase() + item.status.slice(1);
                 const dataDesFormatada = item.dataDesejada ? item.dataDesejada.split('-').reverse().join('/') : '-';
                 const dataAtendidoFormatada = item.dataAtendido ? item.dataAtendido.split('-').reverse().join('/') : '-';
 
                 return [
-                    cod + nimbi,
+                    infoCodigos,
                     item.nome,
                     item.local || 'Geral',
                     item.semanaMes || '-',
@@ -345,6 +375,7 @@
                 headStyles: { fillColor: [249, 115, 22] },
                 alternateRowStyles: { fillColor: [248, 250, 252] },
                 columnStyles: {
+                    0: { fontStyle: 'bold' },
                     3: { halign: 'center', fontStyle: 'bold' },
                     4: { halign: 'center' },
                     5: { halign: 'center' },
@@ -373,6 +404,26 @@
             renderizarLista();
         });
 
+        // Atualiza exclusivamente o campo de número do Pedido Nimbi
+        window.atualizarPedidoNimbi = async (id, valor) => {
+            try { 
+                await updateDoc(doc(db, "compras", id), { 
+                    pedidoNimbi: valor.trim()
+                }); 
+            } 
+            catch (e) { console.error("Erro ao atualizar pedido Nimbi:", e); }
+        };
+
+        // Atualiza exclusivamente o campo de número do Pedido Maxxy
+        window.atualizarPedidoMaxxy = async (id, valor) => {
+            try { 
+                await updateDoc(doc(db, "compras", id), { 
+                    pedidoMaxxy: valor.trim() 
+                }); 
+            } 
+            catch (e) { console.error("Erro ao atualizar pedido Maxxy:", e); }
+        };
+
         window.atualizarSemana = async (id, semana) => {
             try { await updateDoc(doc(db, "compras", id), { semanaMes: semana }); } 
             catch (e) { console.error("Erro ao atualizar semana:", e); }
@@ -390,9 +441,7 @@
 
         window.atualizarStatus = async (id, novoStatus) => {
             try { 
-                const updateData = { status: novoStatus };
-                // Se alterar para diferente de atendido, limpa a data de atendimento opcionalmente (ou mantém se preferir)
-                await updateDoc(doc(db, "compras", id), updateData); 
+                await updateDoc(doc(db, "compras", id), { status: novoStatus }); 
             } 
             catch (e) { console.error("Erro ao atualizar status:", e); }
         };

@@ -3,579 +3,580 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚙️ Mecânica App - Oficial</title>
+    <title>⚙️ Compras Realizadas - Mecânica App</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+    <!-- Bibliotecas para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
     <style>
-        :root { --primary: #f97316; --border: #e2e8f0; } /* Laranja Mecânica */
-        .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; box-sizing: border-box; z-index: 1000; }
-        body { padding-top: 85px; }
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .ultrapassou { color: #ef4444 !important; }
-        .alerta-animado { animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        :root { --primary: #f97316; --bg: #f8fafc; } /* Cor Laranja - Mecânica */
+        body { font-family: 'Inter', sans-serif; background: var(--bg); }
+        
+        /* Cores de Status */
+        .status-solicitacao { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+        .status-liberado { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .status-pedido { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+        .status-cancelado { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .status-atendido { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .status-parcial { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+
+        .navbar { position: fixed; top: 0; width: 100%; height: 64px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; z-index: 1000; box-sizing: border-box; }
+        .compra-card { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .compra-card:hover { border-color: #f97316; transform: translateY(-2px); }
+        .obs-input { width: 100%; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; }
+        .obs-input:focus { border-color: #f97316; background: #fff; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+        
+        .ped-input { width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; outline: none; background: #fff; transition: all 0.2s; }
+        .ped-input:focus { border-color: #f97316; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15); }
+
+        .filter-control { background: white; border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; }
+        .filter-control:focus { border-color: #f97316; }
+
+        .resumo-card { cursor: pointer; transition: all 0.15s ease; }
+        .resumo-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08); }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen px-4 pb-12">
+<body class="pt-24 pb-12 px-4">
+
     <nav class="navbar shadow-sm">
-        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;"><span>⚙️</span> MECÂNICA APP</div>
-        <a href="../principal.html" class="text-slate-500 hover:text-orange-500 font-semibold text-sm transition-colors tracking-tighter uppercase">Voltar ao Início</a>
+        <div class="flex items-center gap-2" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">⚙️ MECÂNICA APP</div>
+        <a href="../principal.html" class="text-slate-500 hover:text-orange-500 font-bold text-sm tracking-tight uppercase transition-colors">Voltar ao Início</a>
     </nav>
 
     <div class="max-w-6xl mx-auto">
-        <div class="bg-white p-5 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between border border-slate-200">
+        <div class="mb-6 flex flex-col justify-between gap-4">
             <div>
-                <h1 class="text-xl font-extrabold text-slate-800 tracking-tight text-orange-500 uppercase">Orçamentos Mensais</h1>
-                <p class="text-[10px] text-green-500 font-bold uppercase tracking-wider">● Sincronização Automática para Compras</p>
+                <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">📦 Histórico de Compras Realizadas</h1>
+                <p class="text-slate-400 text-sm font-medium">Gestão de estado, controle de pedidos Nimbi/Maxxy e observações em tempo real.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-4">
-                <div class="flex flex-col">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Meta deste Mês</label>
-                    <input type="text" id="limiteOrcamento" disabled oninput="aplicarMascara(this)" class="bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-orange-400 w-48 text-right disabled:opacity-50 disabled:cursor-not-allowed">
+
+            <!-- FILTROS E AÇÕES -->
+            <div class="flex flex-wrap gap-3 items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                
+                <!-- BOTÕES -->
+                <div class="flex gap-2">
+                    <button id="btnPendencias" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
+                        🚚 Follow-up
+                    </button>
+                    <button onclick="window.gerarPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors shadow-sm flex items-center gap-2">
+                        📄 Baixar PDF
+                    </button>
                 </div>
-                <div class="flex items-center gap-2 bg-slate-100 p-2 rounded-xl border border-slate-200">
-                    <select id="selectMes" onchange="trocarPeriodo()" class="bg-transparent px-2 font-bold text-slate-700 outline-none">
-                        <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+
+                <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
+
+                <!-- FILTRO DE MÊS E ANO DE REFERÊNCIA -->
+                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg p-1">
+                    <select id="filtroMes" class="bg-transparent font-bold text-slate-700 text-xs outline-none cursor-pointer">
+                        <option value="todos">Todos os Meses</option>
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
                     </select>
-                    <select id="selectAno" onchange="trocarPeriodo()" class="bg-transparent px-2 font-bold text-slate-700 outline-none">
-                        <option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option>
+                    <select id="filtroAno" class="bg-transparent font-bold text-slate-700 text-xs outline-none cursor-pointer">
+                        <option value="todos">Todos os Anos</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
                     </select>
                 </div>
+
+                <!-- FILTRO DE SEMANA -->
+                <select id="filtroSemana" class="filter-control font-semibold text-slate-700 text-xs">
+                    <option value="todas">Todas as Semanas</option>
+                    <option value="1ª Semana">1ª Semana</option>
+                    <option value="2ª Semana">2ª Semana</option>
+                    <option value="3ª Semana">3ª Semana</option>
+                    <option value="4ª Semana">4ª Semana</option>
+                    <option value="5ª Semana">5ª Semana</option>
+                </select>
+
+                <!-- BUSCA E STATUS -->
+                <input type="text" id="inputBusca" placeholder="Buscar produto, código, pedidos Nimbi/Maxxy..." class="filter-control flex-1 min-w-[170px] text-xs">
+                
+                <select id="filtroStatus" class="filter-control min-w-[130px] text-xs font-semibold">
+                    <option value="todos">Todos os Estados</option>
+                    <option value="pendentes">⚠️ Pendentes</option>
+                    <option value="solicitacao">Solicitação</option>
+                    <option value="liberado">Liberado</option>
+                    <option value="pedido">Pedido Gerado</option>
+                    <option value="cancelado">Cancelado</option>
+                    <option value="atendido">Atendido</option>
+                    <option value="parcial">Parcial</option>
+                </select>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
-                <h2 class="text-xs font-bold mb-4 text-slate-400 uppercase tracking-widest">Pesquisar Produto</h2>
-                <input type="text" id="inputBusca" oninput="monitorarBusca(this.value)" placeholder="Digite nome ou código..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 mb-4 transition-all">
-                <div id="listaSugestoes" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scroll"></div>
+        <!-- RESUMO FINANCEIRO POR STATUS (CLICÁVEL PARA FILTRAR) -->
+        <div id="resumoStatus" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+            <div onclick="window.filtrarPorCard('solicitacao')" class="resumo-card bg-yellow-50 border border-yellow-200 p-3 rounded-xl" title="Clique para filtrar por Solicitação">
+                <div class="text-[10px] font-black text-yellow-800 uppercase tracking-wider">Solicitação</div>
+                <div id="val-solicitacao" class="text-sm font-black text-yellow-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-solicitacao" class="text-[10px] font-semibold text-yellow-700">0 itens</div>
             </div>
+            <div onclick="window.filtrarPorCard('liberado')" class="resumo-card bg-slate-100 border border-slate-200 p-3 rounded-xl" title="Clique para filtrar por Liberado">
+                <div class="text-[10px] font-black text-slate-600 uppercase tracking-wider">Liberado</div>
+                <div id="val-liberado" class="text-sm font-black text-slate-800 mt-0.5">R$ 0,00</div>
+                <div id="qtd-liberado" class="text-[10px] font-semibold text-slate-500">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('pedido')" class="resumo-card bg-orange-50 border border-orange-200 p-3 rounded-xl" title="Clique para filtrar por Pedido Gerado">
+                <div class="text-[10px] font-black text-orange-700 uppercase tracking-wider">Pedido Gerado</div>
+                <div id="val-pedido" class="text-sm font-black text-orange-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-pedido" class="text-[10px] font-semibold text-orange-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('parcial')" class="resumo-card bg-purple-50 border border-purple-200 p-3 rounded-xl" title="Clique para filtrar por Parcial">
+                <div class="text-[10px] font-black text-purple-700 uppercase tracking-wider">Parcial</div>
+                <div id="val-parcial" class="text-sm font-black text-purple-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-parcial" class="text-[10px] font-semibold text-purple-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('atendido')" class="resumo-card bg-green-50 border border-green-200 p-3 rounded-xl" title="Clique para filtrar por Atendido">
+                <div class="text-[10px] font-black text-green-700 uppercase tracking-wider">Atendido</div>
+                <div id="val-atendido" class="text-sm font-black text-green-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-atendido" class="text-[10px] font-semibold text-green-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('cancelado')" class="resumo-card bg-red-50 border border-red-200 p-3 rounded-xl" title="Clique para filtrar por Cancelado">
+                <div class="text-[10px] font-black text-red-700 uppercase tracking-wider">Cancelado</div>
+                <div id="val-cancelado" class="text-sm font-black text-red-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-cancelado" class="text-[10px] font-semibold text-red-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('todos')" class="resumo-card bg-slate-800 border border-slate-700 p-3 rounded-xl col-span-2 sm:col-span-1" title="Clique para mostrar todos os estados">
+                <div class="text-[10px] font-black text-orange-400 uppercase tracking-wider">Total Ativo</div>
+                <div id="val-total-ativo" class="text-sm font-black text-white mt-0.5">R$ 0,00</div>
+                <div class="text-[9px] font-semibold text-slate-400">Exceto cancelados</div>
+            </div>
+        </div>
 
-            <div class="lg:col-span-7 bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-fit">
-                <div class="bg-slate-800 p-4 flex justify-between items-center shrink-0">
-                    <h2 class="text-white font-bold text-xs uppercase tracking-widest" id="labelPeriodo">Carregando...</h2>
-                    <div class="flex items-center gap-2">
-                        <button id="btnGerarPDF" onclick="window.exportarPDF()" class="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR PDF</button>
-                        <button onclick="window.exportarLibreOffice()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-sm">GERAR PLANILHA</button>
-                    </div>
-                </div>
-                <div class="p-4 bg-slate-50 border-b flex justify-between items-center shrink-0">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subtotal Acumulado</span>
-                        <span id="totalPreco" class="text-2xl font-black text-slate-800 tracking-tighter transition-all">R$ 0,00</span>
-                    </div>
-                    <div id="alertaLimite" class="hidden bg-red-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase alerta-animado">⚠️ Limite Excedido</div>
-                </div>
-                <ul id="listaComprasUI" class="divide-y divide-slate-100 overflow-y-auto max-h-[450px] custom-scroll min-h-[300px]"></ul>
-            </div>
+        <div id="listaCompras" class="grid gap-4">
+            <div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">A carregar registos...</div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // ================= CONFIGURAÇÕES FIREBASE (MECÂNICA) =================
-        const firebaseConfigMecanica = {
+        const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
             authDomain: "mecanica-699bb.firebaseapp.com",
             projectId: "mecanica-699bb",
+            storageBucket: "mecanica-699bb.firebasestorage.app",
             messagingSenderId: "223675812288",
             appId: "1:223675812288:web:f91f3dab6705fa7a2aa025",
             measurementId: "G-G78PR55F9F"
         };
 
-        const firebaseConfigEletrica = {
-            apiKey: "AIzaSyB_w4-z_onAEUf10ROfYCmvnm6Fkkp2sYo",
-            authDomain: "eletrica-8c96e.firebaseapp.com",
-            projectId: "eletrica-8c96e",
-            storageBucket: "eletrica-8c96e.firebasestorage.app",
-            messagingSenderId: "456815528430",
-            appId: "1:456815528430:web:4cf873dc8071c9a2bbe6ff"
-        };
-
-        const app = initializeApp(firebaseConfigMecanica);
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app);
+        const comprasRef = collection(db, "compras");
 
-        const appEletrica = initializeApp(firebaseConfigEletrica, "appEletrica");
-        const dbEletrica = getFirestore(appEletrica);
+        let todosRegistros = [];
+        let registrosFiltrados = []; 
 
-        const ADMIN_IDS = [
-            "0dN2teZrTkYkg26rBrKcEDpy5El1",
-            "kBGhpXomEbcn8aqxrvQr1z4hWz22"
-        ];
-        let isUserAdmin = false;
+        const formatarBRL = (valor) => {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        };
 
-        onAuthStateChanged(auth, (user) => {
-            if (user && ADMIN_IDS.includes(String(user.uid).trim())) {
-                isUserAdmin = true;
-                const inputMeta = document.getElementById('limiteOrcamento');
-                if (inputMeta) inputMeta.removeAttribute('disabled');
-            } else {
-                isUserAdmin = false;
-                const inputMeta = document.getElementById('limiteOrcamento');
-                if (inputMeta) inputMeta.setAttribute('disabled', 'true');
+        const extrairAnoMes = (item) => {
+            const dataBase = item.dataDesejada || item.data || "";
+            if (dataBase && dataBase.includes("-")) {
+                const partes = dataBase.split("-");
+                return { ano: partes[0], mes: partes[1] };
             }
-        });
-
-        let todosProdutos = [];
-        let carrinhoAtual = [];
-        let periodoId = "";
-        let somaTotalGlobal = 0;
-        let valorLimiteDesteMes = 0;
-        let editandoItemId = null;
-
-        async function init() {
-            const snap = await getDocs(collection(db, "produtos"));
-            todosProdutos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            const d = new Date();
-            document.getElementById('selectMes').value = String(d.getMonth() + 1).padStart(2, '0');
-            document.getElementById('selectAno').value = d.getFullYear();
-            trocarPeriodo();
-        }
-
-        window.aplicarMascara = (campo) => {
-            let v = campo.value.replace(/\D/g, "");
-            v = (v / 100).toFixed(2) + "";
-            v = v.replace(".", ",");
-            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-            campo.value = "R$ " + v;
-            valorLimiteDesteMes = parseFloat(campo.value.replace(/[R$\s.]/g, "").replace(",", "."));
-            salvarMetaNoBanco();
+            return { ano: "", mes: "" };
         };
 
-        async function salvarMetaNoBanco() {
-            if (!isUserAdmin) return; 
-            await setDoc(doc(db, "listas_mensais", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
-        }
+        const atualizarResumoValores = () => {
+            const busca = document.getElementById('inputBusca').value.toLowerCase();
+            const semanaFiltro = document.getElementById('filtroSemana').value;
+            const mesFiltro = document.getElementById('filtroMes').value;
+            const anoFiltro = document.getElementById('filtroAno').value;
 
-        window.trocarPeriodo = () => {
-            const mes = document.getElementById('selectMes').value;
-            const ano = document.getElementById('selectAno').value;
-            periodoId = `${mes}-${ano}`;
-            const mesNome = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
-            document.getElementById('labelPeriodo').innerText = `Orçamento: ${mesNome} / ${ano}`;
-            editandoItemId = null;
+            const baseResumo = todosRegistros.filter(item => {
+                const nome = item.nome?.toLowerCase() || "";
+                const codigo = item.codigo?.toLowerCase() || "";
+                const codigoNimbi = item.codigoNimbi?.toLowerCase() || "";
+                const pedNimbi = (item.pedidoNimbi || "")?.toLowerCase();
+                const pedMaxxy = (item.pedidoMaxxy || "")?.toLowerCase();
+                const semana = item.semanaMes || "";
+                
+                const matchesBusca = nome.includes(busca) || 
+                                     codigo.includes(busca) || 
+                                     codigoNimbi.includes(busca) ||
+                                     pedNimbi.includes(busca) || 
+                                     pedMaxxy.includes(busca);
+                
+                const matchesSemana = semanaFiltro === "todas" || semana === semanaFiltro;
+                const { ano, mes } = extrairAnoMes(item);
+                const matchesMes = mesFiltro === "todos" || mes === mesFiltro;
+                const matchesAno = anoFiltro === "todos" || ano === anoFiltro;
 
-            onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
-                if (docSnap.exists()) {
-                    const dados = docSnap.data();
-                    carrinhoAtual = (dados.itens || []).map((it, idx) => ({
-                        ...it,
-                        itemId: it.itemId || `${it.id}_${idx}_${Date.now()}`
-                    }));
-                    valorLimiteDesteMes = dados.meta !== undefined ? dados.meta : 0;
-                } else {
-                    carrinhoAtual = []; valorLimiteDesteMes = 0;
-                }
-                const input = document.getElementById('limiteOrcamento');
-                if (document.activeElement !== input) {
-                    input.value = (valorLimiteDesteMes || 0).toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
-                }
-                renderizarCarrinho();
-                monitorarBusca(document.getElementById('inputBusca').value);
+                return matchesBusca && matchesSemana && matchesMes && matchesAno;
             });
-        };
 
-        window.monitorarBusca = (termo) => {
-            const lista = document.getElementById('listaSugestoes');
-            if (termo.length < 2) { lista.innerHTML = ""; return; }
-            const filtrados = todosProdutos.filter(p => (p.codigo && String(p.codigo).includes(termo)) || (p.nome && p.nome.toLowerCase().includes(termo.toLowerCase())));
-            
-            lista.innerHTML = filtrados.map(p => {
-                return `
-                <div class="p-4 border rounded-2xl bg-white shadow-sm border-slate-100 flex flex-col gap-2 transition-all hover:border-orange-200">
-                    <p class="font-bold text-slate-800 text-sm leading-tight">${p.nome}</p>
-                    <p class="text-[10px] text-slate-400 font-mono font-bold uppercase tracking-tighter">Cód: ${p.codigo} | Unit: R$ ${p.valor}</p>
-                    
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-1">
-                        <select id="semana-${p.id}" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400" title="Semana do Mês">
-                            <option value="">Semana (Op.)</option>
-                            <option value="1ª Semana">1ª Semana</option>
-                            <option value="2ª Semana">2ª Semana</option>
-                            <option value="3ª Semana">3ª Semana</option>
-                            <option value="4ª Semana">4ª Semana</option>
-                            <option value="5ª Semana">5ª Semana</option>
-                        </select>
-                        <input type="date" id="dataDesejada-${p.id}" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400" title="Data Desejada">
-                        <input type="text" id="local-${p.id}" placeholder="Local (ex: Setor A)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                        <input type="text" id="nimbi-${p.id}" placeholder="Cód. Nimbi" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                        <input type="text" id="movimentacao-${p.id}" placeholder="Cód. Mov." class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                    </div>
-
-                    <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
-                        <input type="number" id="qtd-${p.id}" value="1" min="1" class="w-16 p-2 bg-slate-100 border rounded-lg text-sm font-bold text-center outline-none">
-                        <button onclick="adicionar('${p.id}')" class="flex-1 py-2 rounded-xl text-[10px] font-black uppercase shadow-md bg-orange-500 text-white hover:bg-orange-600 shadow-orange-100">＋ Adicionar à Lista</button>
-                    </div>
-                </div>`;
-            }).join('');
-        };
-
-        window.adicionar = async (id) => {
-            const prod = todosProdutos.find(p => p.id === id);
-            const qtd = parseInt(document.getElementById(`qtd-${id}`).value) || 1;
-            const semana = document.getElementById(`semana-${id}`).value || "";
-            const dataDes = document.getElementById(`dataDesejada-${id}`).value || "";
-            const localUso = document.getElementById(`local-${id}`).value || "Geral";
-            const codNimbi = document.getElementById(`nimbi-${id}`).value || "";
-            const codMov = document.getElementById(`movimentacao-${id}`).value || "";
-            const valorUnit = parseFloat(String(prod.valor).replace(',', '.'));
-            
-            // Cada adição gera um itemId único para permitir o mesmo produto repetido com Nimbi ou semana diferente
-            const novoItem = {
-                ...prod,
-                itemId: Date.now() + "_" + Math.random().toString(36).substring(2, 7),
-                quantidade: qtd,
-                semanaMes: semana,
-                dataDesejada: dataDes,
-                local: localUso,
-                codigoNimbi: codNimbi,
-                codigoMovimentacao: codMov
+            const resumo = {
+                solicitacao: { valor: 0, qtd: 0 },
+                liberado: { valor: 0, qtd: 0 },
+                pedido: { valor: 0, qtd: 0 },
+                parcial: { valor: 0, qtd: 0 },
+                atendido: { valor: 0, qtd: 0 },
+                cancelado: { valor: 0, qtd: 0 }
             };
 
-            const novaLista = [...carrinhoAtual, novoItem];
-            await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+            let totalAtivo = 0;
 
-            await addDoc(collection(db, "compras"), {
-                nome: prod.nome,
-                codigo: prod.codigo || "S/C",
-                codigoNimbi: codNimbi,
-                codigoMovimentacao: codMov,
-                local: localUso,
-                origem: "Mecânica",
-                semanaMes: semana,
-                quantidade: qtd,
-                dataDesejada: dataDes,
-                valorUnitario: valorUnit,
-                valorTotal: valorUnit * qtd,
-                data: new Date().toISOString().split('T')[0],
-                status: "solicitacao",
-                observacao: `Nimbi: ${codNimbi} | Mov: ${codMov}${semana ? ' | ' + semana : ''}`,
-                dataCriacao: new Date()
-            });
+            baseResumo.forEach(item => {
+                const st = item.status || "solicitacao";
+                const val = parseFloat(item.valorTotal) || 0;
 
-            const elNimbi = document.getElementById(`nimbi-${id}`);
-            if (elNimbi) elNimbi.value = "";
-        };
-
-        window.remover = async (itemId) => {
-            const novaLista = carrinhoAtual.filter(i => (i.itemId || i.id) !== itemId);
-            await setDoc(doc(db, "listas_mensais", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
-        };
-
-        window.editar = (itemId) => {
-            editandoItemId = itemId;
-            renderizarCarrinho();
-        };
-
-        window.cancelarEdicao = () => {
-            editandoItemId = null;
-            renderizarCarrinho();
-        };
-
-        window.salvarEdicao = async (itemId) => {
-            const index = carrinhoAtual.findIndex(i => (i.itemId || i.id) === itemId);
-            if (index !== -1) {
-                const novaQtd = parseInt(document.getElementById(`edit-qtd-${itemId}`).value) || 1;
-                const novaSemana = document.getElementById(`edit-semana-${itemId}`).value || "";
-                const novaDataDes = document.getElementById(`edit-dataDes-${itemId}`).value || "";
-                const novoLocal = document.getElementById(`edit-local-${itemId}`).value || "Geral";
-                const novoNimbi = document.getElementById(`edit-nimbi-${itemId}`).value || "";
-                const novoMov = document.getElementById(`edit-mov-${itemId}`).value || "";
-
-                carrinhoAtual[index].quantidade = novaQtd;
-                carrinhoAtual[index].semanaMes = novaSemana;
-                carrinhoAtual[index].dataDesejada = novaDataDes;
-                carrinhoAtual[index].local = novoLocal;
-                carrinhoAtual[index].codigoNimbi = novoNimbi;
-                carrinhoAtual[index].codigoMovimentacao = novoMov;
-
-                editandoItemId = null;
-                renderizarCarrinho();
-
-                await setDoc(doc(db, "listas_mensais", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
-            }
-        };
-
-        window.exportarPDF = async () => {
-            const btn = document.getElementById('btnGerarPDF');
-            const textoOriginal = btn.innerText;
-            btn.innerText = "GERANDO..."; 
-
-            const { jsPDF } = window.jspdf;
-            const docPdf = new jsPDF();
-            const mesRef = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
-            const anoRef = document.getElementById('selectAno').value;
-
-            let itensParaRelatorio = carrinhoAtual.map(i => ({...i, origem: "Mecânica"}));
-            let metaEletrica = 0;
-
-            if (isUserAdmin) {
-                try {
-                    const docRef = doc(dbEletrica, "listas_mensais", periodoId);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const dadosEle = docSnap.data();
-                        const itensEle = dadosEle.itens || [];
-                        metaEletrica = dadosEle.meta || 0;
-                        itensEle.forEach(i => i.origem = "Elétrica");
-                        itensParaRelatorio = [...itensParaRelatorio, ...itensEle];
-                    }
-                } catch (erro) {
-                    console.error("Erro ao buscar dados da Elétrica para o PDF:", erro);
+                if (resumo[st]) {
+                    resumo[st].valor += val;
+                    resumo[st].qtd += 1;
                 }
-            }
 
-            const gruposNimbi = {};
-            const totaisMovimentacao = {}; 
-            
-            itensParaRelatorio.forEach(item => {
-                const nimbi = (item.codigoNimbi || "").trim() || "Sem Código Nimbi";
-                if (!gruposNimbi[nimbi]) gruposNimbi[nimbi] = { itens: [], subtotal: 0 };
-                gruposNimbi[nimbi].itens.push(item);
-                
-                const vUnit = parseFloat(String(item.valor).replace(',', '.')) || 0;
-                const qtd = parseInt(item.quantidade) || 1;
-                const totalLinha = vUnit * qtd;
-
-                gruposNimbi[nimbi].subtotal += totalLinha;
-
-                const mov = (item.codigoMovimentacao || "").trim() || "Sem Cód. Mov.";
-                if (!totaisMovimentacao[mov]) totaisMovimentacao[mov] = 0;
-                totaisMovimentacao[mov] += totalLinha;
+                if (st !== "cancelado") {
+                    totalAtivo += val;
+                }
             });
 
-            docPdf.setFontSize(14);
-            docPdf.text(`Relatório de Compras: ${mesRef} / ${anoRef}`, 14, 15);
-            
-            if(isUserAdmin) {
-                docPdf.setFontSize(9);
-                docPdf.setTextColor(100, 100, 100);
-                docPdf.text(`(Contempla dados unificados de Mecânica e Elétrica)`, 14, 20);
-                docPdf.setTextColor(0, 0, 0);
-            }
-
-            let currentY = isUserAdmin ? 25 : 22;
-            let gastoTotalSomado = 0;
-            const chavesOrdenadas = Object.keys(gruposNimbi).sort();
-
-            for (const nimbi of chavesOrdenadas) {
-                const grupo = gruposNimbi[nimbi];
-                if (currentY > 260) { docPdf.addPage(); currentY = 20; }
-
-                docPdf.setFontSize(11);
-                docPdf.setFont(undefined, 'bold');
-                docPdf.setTextColor(249, 115, 22); 
-                docPdf.text(`Cód Nimbi: ${nimbi}`, 14, currentY);
-                docPdf.setTextColor(0, 0, 0); 
-                currentY += 5;
-
-                const colunas = ["Cód", "Mov", "Produto", "Semana", "Local", "Qtd", "Unit", "Total"];
-                if (isUserAdmin) colunas.push("Origem");
-
-                const linhas = grupo.itens.map(item => {
-                    const vUnit = parseFloat(String(item.valor).replace(',', '.')) || 0;
-                    const totalLinha = vUnit * item.quantidade;
-                    
-                    const row = [
-                        item.codigo || "-", 
-                        item.codigoMovimentacao || "-", 
-                        item.nome, 
-                        item.semanaMes || "-",
-                        item.local || "Geral", 
-                        item.quantidade, 
-                        `R$ ${vUnit.toFixed(2).replace('.', ',')}`, 
-                        `R$ ${totalLinha.toFixed(2).replace('.', ',')}`
-                    ];
-                    if (isUserAdmin) row.push(item.origem);
-                    return row;
-                });
-
-                docPdf.autoTable({ 
-                    head: [colunas], 
-                    body: linhas, 
-                    startY: currentY,
-                    theme: 'striped',
-                    headStyles: { fillColor: [249, 115, 22] }, 
-                    styles: { fontSize: 8 },
-                    margin: { bottom: 15 } 
-                });
-
-                currentY = docPdf.lastAutoTable.finalY + 6;
-                docPdf.setFontSize(10);
-                docPdf.setFont(undefined, 'bold');
-                docPdf.text(`Cód Nimbi ${nimbi} Valor R$ ${grupo.subtotal.toFixed(2).replace('.', ',')}`, 14, currentY);
-                
-                currentY += 12; 
-                gastoTotalSomado += grupo.subtotal;
-            }
-
-            const chavesMov = Object.keys(totaisMovimentacao).sort();
-            let alturaResumoBase = isUserAdmin ? 35 : 20; 
-            let alturaSessaoMovimentos = 15 + (chavesMov.length * 5); 
-            let alturaTotalBox = alturaResumoBase + alturaSessaoMovimentos;
-
-            if (currentY + alturaTotalBox > 280) { docPdf.addPage(); currentY = 20; }
-
-            docPdf.setFillColor(241, 245, 249); 
-            docPdf.rect(14, currentY - 5, 180, alturaTotalBox, 'F');
-            docPdf.setFontSize(11);
-            docPdf.setFont(undefined, 'bold');
-            docPdf.text(`RESUMO GERAL DO MÊS`, 18, currentY + 2);
-            currentY += 10;
-            
-            docPdf.setFontSize(10);
-            docPdf.setFont(undefined, 'normal');
-            docPdf.text(`Total de Compras Solicitadas: R$ ${gastoTotalSomado.toFixed(2).replace('.', ',')}`, 18, currentY);
-            currentY += 5;
-            docPdf.text(`Meta (Mecânica): R$ ${valorLimiteDesteMes.toFixed(2).replace('.', ',')}`, 18, currentY);
-            
-            if (isUserAdmin) {
-                currentY += 5;
-                docPdf.text(`Meta (Elétrica): R$ ${metaEletrica.toFixed(2).replace('.', ',')}`, 18, currentY);
-                currentY += 5;
-                docPdf.setFont(undefined, 'bold');
-                docPdf.text(`Meta Total Unificada: R$ ${(valorLimiteDesteMes + metaEletrica).toFixed(2).replace('.', ',')}`, 18, currentY);
-            }
-
-            currentY += 10;
-            docPdf.setFontSize(10);
-            docPdf.setFont(undefined, 'bold');
-            docPdf.text(`TOTAL GASTO POR CÓDIGO DE MOVIMENTAÇÃO:`, 18, currentY);
-            currentY += 6;
-            docPdf.setFontSize(9);
-            docPdf.setFont(undefined, 'normal');
-            
-            chavesMov.forEach(mov => {
-                docPdf.text(`- Cód Mov: ${mov} -> R$ ${totaisMovimentacao[mov].toFixed(2).replace('.', ',')}`, 18, currentY);
-                currentY += 5;
+            Object.keys(resumo).forEach(st => {
+                const elVal = document.getElementById(`val-${st}`);
+                const elQtd = document.getElementById(`qtd-${st}`);
+                if (elVal) elVal.innerText = formatarBRL(resumo[st].valor);
+                if (elQtd) elQtd.innerText = `${resumo[st].qtd} ${resumo[st].qtd === 1 ? 'item' : 'itens'}`;
             });
 
-            docPdf.save(`Orcamento_Mecanica_${mesRef}_${anoRef}.pdf`);
-            btn.innerText = textoOriginal;
+            const elTotalAtivo = document.getElementById('val-total-ativo');
+            if (elTotalAtivo) elTotalAtivo.innerText = formatarBRL(totalAtivo);
         };
 
-        window.exportarLibreOffice = () => {
-            if (carrinhoAtual.length === 0) return alert("Adicione itens antes de exportar!");
-
-            const mesRef = document.getElementById('selectMes').options[document.getElementById('selectMes').selectedIndex].text;
-            const anoRef = document.getElementById('selectAno').value;
-
-            const dadosExcel = carrinhoAtual.map(item => {
-                const vUnit = parseFloat(String(item.valor).replace(',', '.'));
-                return {
-                    "Código": item.codigo || "S/C",
-                    "Cód. Nimbi": item.codigoNimbi || "",
-                    "Cód. Mov.": item.codigoMovimentacao || "",
-                    "Semana de Compra": item.semanaMes || "",
-                    "Data Desejada": item.dataDesejada || "",
-                    "Descrição do Produto": item.nome,
-                    "Local de Aplicação": item.local || "Geral",
-                    "Qtd": item.quantidade,
-                    "Valor Unitário": vUnit,
-                    "Valor Total": vUnit * item.quantidade
-                };
-            });
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(dadosExcel);
-            ws['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 15 }, { wch: 45 }, { wch: 20 }, { wch: 8 }, { wch: 15 }, { wch: 15 }];
-            XLSX.utils.book_append_sheet(wb, ws, "Orcamento");
-            XLSX.writeFile(wb, `Orcamento_Mecanica_${mesRef}_${anoRef}.xlsx`);
+        window.filtrarPorCard = (status) => {
+            const selectStatus = document.getElementById('filtroStatus');
+            selectStatus.value = (selectStatus.value === status && status !== 'todos') ? 'todos' : status;
+            renderizarLista();
         };
 
-        function renderizarCarrinho() {
-            const ui = document.getElementById('listaComprasUI');
-            somaTotalGlobal = 0;
-            if (carrinhoAtual.length === 0) {
-                ui.innerHTML = `<div class="py-24 text-center text-slate-300 font-bold text-[10px] uppercase tracking-widest">Nenhum Item Adicionado</div>`;
-                document.getElementById('totalPreco').innerText = "R$ 0,00";
-                validarLimite();
+        const renderizarLista = () => {
+            atualizarResumoValores();
+
+            const container = document.getElementById('listaCompras');
+            const busca = document.getElementById('inputBusca').value.toLowerCase();
+            const statusFiltro = document.getElementById('filtroStatus').value;
+            const semanaFiltro = document.getElementById('filtroSemana').value;
+            const mesFiltro = document.getElementById('filtroMes').value;
+            const anoFiltro = document.getElementById('filtroAno').value;
+
+            registrosFiltrados = todosRegistros.filter(item => {
+                const nome = item.nome?.toLowerCase() || "";
+                const codigo = item.codigo?.toLowerCase() || "";
+                const codigoNimbi = item.codigoNimbi?.toLowerCase() || "";
+                const pedNimbi = (item.pedidoNimbi || "")?.toLowerCase();
+                const pedMaxxy = (item.pedidoMaxxy || "")?.toLowerCase();
+                const status = item.status || "";
+                const semana = item.semanaMes || "";
+                
+                const matchesBusca = nome.includes(busca) || 
+                                     codigo.includes(busca) || 
+                                     codigoNimbi.includes(busca) ||
+                                     pedNimbi.includes(busca) || 
+                                     pedMaxxy.includes(busca);
+                
+                const matchesStatus = 
+                    statusFiltro === "todos" || 
+                    status === statusFiltro ||
+                    (statusFiltro === "pendentes" && (status === "pedido" || status === "parcial"));
+
+                const matchesSemana = semanaFiltro === "todas" || semana === semanaFiltro;
+
+                const { ano, mes } = extrairAnoMes(item);
+                const matchesMes = mesFiltro === "todos" || mes === mesFiltro;
+                const matchesAno = anoFiltro === "todos" || ano === anoFiltro;
+
+                return matchesBusca && matchesStatus && matchesSemana && matchesMes && matchesAno;
+            });
+
+            if (registrosFiltrados.length === 0) {
+                container.innerHTML = `<div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">Nenhum registo encontrado</div>`;
                 return;
             }
-            ui.innerHTML = carrinhoAtual.map(p => {
-                const itemChave = p.itemId || p.id;
-                const totalLinha = (parseFloat(String(p.valor).replace(',', '.')) || 0) * (p.quantidade || 1);
-                somaTotalGlobal += totalLinha;
-                
-                if (editandoItemId === itemChave) {
-                    return `
-                    <li class="p-4 bg-orange-50 border-b border-orange-100 flex flex-col gap-2">
-                        <p class="text-sm font-bold text-orange-800 leading-tight">Editando: ${p.nome}</p>
-                        <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mt-1">
-                            <select id="edit-semana-${itemChave}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                                <option value="" ${!p.semanaMes ? 'selected' : ''}>Sem Semana</option>
-                                <option value="1ª Semana" ${p.semanaMes === '1ª Semana' ? 'selected' : ''}>1ª Semana</option>
-                                <option value="2ª Semana" ${p.semanaMes === '2ª Semana' ? 'selected' : ''}>2ª Semana</option>
-                                <option value="3ª Semana" ${p.semanaMes === '3ª Semana' ? 'selected' : ''}>3ª Semana</option>
-                                <option value="4ª Semana" ${p.semanaMes === '4ª Semana' ? 'selected' : ''}>4ª Semana</option>
-                                <option value="5ª Semana" ${p.semanaMes === '5ª Semana' ? 'selected' : ''}>5ª Semana</option>
-                            </select>
-                            <input type="date" id="edit-dataDes-${itemChave}" value="${p.dataDesejada || ''}" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="text" id="edit-local-${itemChave}" value="${p.local || ''}" placeholder="Local" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="text" id="edit-nimbi-${itemChave}" value="${p.codigoNimbi || ''}" placeholder="Cód. Nimbi" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="text" id="edit-mov-${itemChave}" value="${p.codigoMovimentacao || ''}" placeholder="Cód. Mov." class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold outline-none focus:ring-1 focus:ring-orange-400">
-                            <input type="number" id="edit-qtd-${itemChave}" value="${p.quantidade}" min="1" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold text-center outline-none focus:ring-1 focus:ring-orange-400">
-                        </div>
-                        <div class="flex justify-end gap-2 mt-2">
-                            <button onclick="cancelarEdicao()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-bold rounded-lg uppercase transition-colors">Cancelar</button>
-                            <button onclick="salvarEdicao('${itemChave}')" class="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-bold rounded-lg uppercase shadow-sm transition-colors">Salvar Alterações</button>
-                        </div>
-                    </li>`;
+
+            container.innerHTML = "";
+            registrosFiltrados.forEach(item => {
+                const statusClass = `status-${item.status}`;
+                const nimbiDisplay = item.codigoNimbi ? `<span class="text-purple-600 font-bold ml-2">| Nimbi: ${item.codigoNimbi}</span>` : '';
+                const origemDisplay = item.origem ? `<span class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-bold uppercase ml-2">${item.origem}</span>` : '';
+
+                let infoFalta = '';
+                if (item.status === 'parcial') {
+                    const total = parseFloat(item.quantidade) || 0;
+                    const recebido = parseFloat(item.qtdRecebida) || 0;
+                    const falta = total - recebido;
+                    infoFalta = `
+                        <div class="text-[10px] font-bold text-red-600 mt-1 bg-red-50 p-1.5 rounded text-center border border-red-100 uppercase tracking-tighter">
+                            Falta chegar: ${falta > 0 ? falta : 0}
+                        </div>`;
                 }
 
-                const semanaHtml = p.semanaMes ? `<span class="text-[9px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-black uppercase border border-emerald-200">🗓️ ${p.semanaMes}</span>` : '';
-                const nimbiHtml = p.codigoNimbi ? `<span class="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-bold uppercase border border-purple-100">Nimbi: ${p.codigoNimbi}</span>` : '';
-                const movHtml = p.codigoMovimentacao ? `<span class="text-[9px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold uppercase border border-amber-100">Mov: ${p.codigoMovimentacao}</span>` : '';
-                const dataDesHtml = p.dataDesejada ? `<span class="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase border border-blue-100">Para: ${p.dataDesejada.split('-').reverse().join('/')}</span>` : '';
+                let inputDinamicoDisplay = '';
+                if (item.status === 'parcial') {
+                    inputDinamicoDisplay = `
+                    <div class="w-32 flex flex-col justify-start">
+                        <input type="number" class="obs-input bg-purple-50 border-purple-200 text-purple-700 font-semibold text-center" 
+                            placeholder="Qtd entregue" 
+                            value="${item.qtdRecebida || ''}" 
+                            onchange="window.atualizarQtdRecebida('${item.id}', this.value)" 
+                            title="Informe a quantidade já entregue">
+                        ${infoFalta}
+                    </div>`;
+                } else if (item.status === 'atendido') {
+                    inputDinamicoDisplay = `
+                    <div class="w-40 flex flex-col justify-start bg-emerald-50 p-1 rounded border border-emerald-100">
+                        <div class="text-[9px] font-black text-emerald-700 uppercase">Data Atendido</div>
+                        <input type="date" value="${item.dataAtendido || ''}" 
+                            onchange="window.atualizarDataAtendido('${item.id}', this.value)" 
+                            class="text-[10px] font-bold text-emerald-800 bg-transparent outline-none w-full text-center cursor-pointer">
+                    </div>`;
+                }
 
-                return `
-                <li class="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors border-b border-slate-50">
-                    <div class="flex-1 pr-4">
-                        <p class="text-sm font-bold text-slate-700 leading-tight">${p.nome}</p>
-                        <div class="flex flex-wrap gap-2 items-center mt-1">
-                            <span class="text-[9px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300">Cód: ${p.codigo || 'S/C'}</span>
-                            <p class="text-[10px] text-slate-400 font-black uppercase tracking-tight">${p.quantidade} un x R$ ${p.valor}</p>
-                            <span class="text-[9px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-bold uppercase border border-orange-100">${p.local || 'Geral'}</span>
-                            ${semanaHtml}
-                            ${dataDesHtml}
-                            ${nimbiHtml}
-                            ${movHtml}
+                const card = document.createElement('div');
+                card.className = 'compra-card p-5';
+                card.innerHTML = `
+                    <div class="flex flex-wrap justify-between items-start gap-4 mb-3">
+                        <div class="flex-1 min-w-[200px]">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                                Cód: ${item.codigo || 'S/C'} ${nimbiDisplay} ${origemDisplay}
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 leading-tight">${item.nome}</h3>
+                            <div class="text-[11px] font-bold text-orange-500 uppercase mt-1">${item.local || 'Geral'}</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center items-center">
+                            <div>
+                                <div class="text-[9px] font-black text-slate-300 uppercase">Qtd</div>
+                                <div class="font-bold text-slate-700">${item.quantidade}</div>
+                            </div>
+                            <div>
+                                <div class="text-[9px] font-black text-slate-300 uppercase">Total</div>
+                                <div class="font-bold text-green-600">R$ ${parseFloat(item.valorTotal || 0).toFixed(2)}</div>
+                            </div>
+
+                            <!-- CAMPO: Semana do Mês -->
+                            <div class="bg-emerald-50 p-1 rounded border border-emerald-100">
+                                <div class="text-[9px] font-black text-emerald-700 uppercase">Semana</div>
+                                <select onchange="window.atualizarSemana('${item.id}', this.value)"
+                                    class="text-[10px] font-bold text-emerald-800 bg-transparent outline-none w-full text-center cursor-pointer">
+                                    <option value="" ${!item.semanaMes ? 'selected' : ''}>-</option>
+                                    <option value="1ª Semana" ${item.semanaMes === '1ª Semana' ? 'selected' : ''}>1ª Sem.</option>
+                                    <option value="2ª Semana" ${item.semanaMes === '2ª Semana' ? 'selected' : ''}>2ª Sem.</option>
+                                    <option value="3ª Semana" ${item.semanaMes === '3ª Semana' ? 'selected' : ''}>3ª Sem.</option>
+                                    <option value="4ª Semana" ${item.semanaMes === '4ª Semana' ? 'selected' : ''}>4ª Sem.</option>
+                                    <option value="5ª Semana" ${item.semanaMes === '5ª Semana' ? 'selected' : ''}>5ª Sem.</option>
+                                </select>
+                            </div>
+                            
+                            <!-- CAMPO: Data Desejada -->
+                            <div class="bg-slate-50 p-1 rounded border border-slate-100">
+                                <div class="text-[9px] font-black text-orange-500 uppercase">Desejada</div>
+                                <input type="date" value="${item.dataDesejada || ''}" 
+                                    onchange="window.atualizarDataDesejada('${item.id}', this.value)" 
+                                    class="text-[10px] font-bold text-slate-700 bg-transparent outline-none w-full text-center cursor-pointer hover:text-orange-500 transition-colors">
+                            </div>
+
+                            <div>
+                                <select onchange="window.atualizarStatus('${item.id}', this.value)" 
+                                    class="text-[10px] font-black uppercase px-2 py-2 rounded-lg outline-none cursor-pointer transition-colors w-full ${statusClass}">
+                                    <option value="solicitacao" ${item.status === 'solicitacao' ? 'selected' : ''}>Solicitação</option>
+                                    <option value="liberado" ${item.status === 'liberado' ? 'selected' : ''}>Liberado</option>
+                                    <option value="pedido" ${item.status === 'pedido' ? 'selected' : ''}>Pedido Gerado</option>
+                                    <option value="cancelado" ${item.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                                    <option value="atendido" ${item.status === 'atendido' ? 'selected' : ''}>Atendido</option>
+                                    <option value="parcial" ${item.status === 'parcial' ? 'selected' : ''}>Parcial</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4 shrink-0">
-                        <span class="text-sm font-black text-slate-800 tracking-tighter">R$ ${totalLinha.toFixed(2).replace('.', ',')}</span>
-                        <div class="flex gap-1 bg-slate-100 rounded-lg p-1">
-                            <button onclick="editar('${itemChave}')" class="p-1.5 text-orange-500 hover:bg-orange-200 hover:text-orange-700 rounded-md font-bold text-xs transition-colors" title="Editar">✏️</button>
-                            <button onclick="remover('${itemChave}')" class="p-1.5 text-red-400 hover:bg-red-200 hover:text-red-600 rounded-md font-bold text-xs transition-colors" title="Remover">✕</button>
+
+                    <!-- LINHA ESPECÍFICA: NÚMEROS DE PEDIDO GERADO (NIMBI / MAXXY) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-purple-700 whitespace-nowrap">📦 Pedido Nimbi:</span>
+                            <input type="text" class="ped-input text-purple-800 border-purple-200" 
+                                placeholder="Nº Pedido Nimbi gerado..." 
+                                value="${item.pedidoNimbi || ''}" 
+                                onchange="window.atualizarPedidoNimbi('${item.id}', this.value)">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-blue-700 whitespace-nowrap">🏢 Pedido Maxxy:</span>
+                            <input type="text" class="ped-input text-blue-800 border-blue-200" 
+                                placeholder="Nº Pedido Maxxy gerado..." 
+                                value="${item.pedidoMaxxy || ''}" 
+                                onchange="window.atualizarPedidoMaxxy('${item.id}', this.value)">
                         </div>
                     </div>
-                </li>`;
-            }).join('');
-            
-            document.getElementById('totalPreco').innerText = `R$ ${somaTotalGlobal.toLocaleString('pt-br', { minimumFractionDigits: 2 })}`;
-            validarLimite();
-        }
 
-        window.validarLimite = () => {
-            const totalUI = document.getElementById('totalPreco');
-            const alertaUI = document.getElementById('alertaLimite');
-            if (somaTotalGlobal > valorLimiteDesteMes && valorLimiteDesteMes > 0) {
-                totalUI.classList.add('ultrapassou');
-                alertaUI.classList.remove('hidden');
-            } else {
-                totalUI.classList.remove('ultrapassou');
-                alertaUI.classList.add('hidden');
-            }
+                    <div class="flex gap-3 items-start">
+                        ${inputDinamicoDisplay}
+                        <div class="flex-1">
+                            <input type="text" class="obs-input bg-slate-50" 
+                                placeholder="Adicionar observação técnica..." 
+                                value="${item.observacao || ''}" 
+                                onchange="window.atualizarObs('${item.id}', this.value)">
+                        </div>
+                        <button onclick="window.excluir('${item.id}')" class="p-2 text-slate-300 hover:text-red-500 transition-colors mt-1" title="Eliminar Registo">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         };
 
-        init();
+        window.gerarPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            const filtroAtual = document.getElementById('filtroStatus').options[document.getElementById('filtroStatus').selectedIndex].text;
+            const filtroSemana = document.getElementById('filtroSemana').options[document.getElementById('filtroSemana').selectedIndex].text;
+            const filtroMes = document.getElementById('filtroMes').options[document.getElementById('filtroMes').selectedIndex].text;
+            const filtroAno = document.getElementById('filtroAno').options[document.getElementById('filtroAno').selectedIndex].text;
+
+            doc.setFontSize(13);
+            doc.text(`Relatório de Compras - Filtros: ${filtroAtual} | ${filtroMes}/${filtroAno} (${filtroSemana})`, 14, 15);
+            
+            doc.setFontSize(9);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 22);
+
+            const colunas = [["Cód / Pedidos", "Material", "Local", "Semana", "Estado", "Desejada", "Atendido em", "Qtd Total", "Valor (R$)"]];
+            
+            const linhas = registrosFiltrados.map(item => {
+                let infoCodigos = `Cód: ${item.codigo || 'S/C'}`;
+                if (item.codigoNimbi) infoCodigos += `\nCód. Nimbi: ${item.codigoNimbi}`;
+                if (item.pedidoNimbi) infoCodigos += `\nPed. Nimbi: ${item.pedidoNimbi}`;
+                if (item.pedidoMaxxy) infoCodigos += `\nPed. Maxxy: ${item.pedidoMaxxy}`;
+                
+                const statusFormatado = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+                const dataDesFormatada = item.dataDesejada ? item.dataDesejada.split('-').reverse().join('/') : '-';
+                const dataAtendidoFormatada = item.dataAtendido ? item.dataAtendido.split('-').reverse().join('/') : '-';
+
+                return [
+                    infoCodigos,
+                    item.nome,
+                    item.local || 'Geral',
+                    item.semanaMes || '-',
+                    statusFormatado,
+                    dataDesFormatada,
+                    item.status === 'atendido' ? dataAtendidoFormatada : '-',
+                    item.quantidade || '0',
+                    `R$ ${parseFloat(item.valorTotal || 0).toFixed(2)}`
+                ];
+            });
+
+            doc.autoTable({
+                head: colunas,
+                body: linhas,
+                startY: 28,
+                styles: { fontSize: 8, cellPadding: 2.5 },
+                headStyles: { fillColor: [249, 115, 22] },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                columnStyles: {
+                    0: { fontStyle: 'bold' },
+                    3: { halign: 'center', fontStyle: 'bold' },
+                    4: { halign: 'center' },
+                    5: { halign: 'center' },
+                    6: { halign: 'center', textColor: [22, 101, 52] },
+                    7: { halign: 'center' },
+                    8: { halign: 'right' }
+                }
+            });
+
+            doc.save(`Relatorio_Compras_${new Date().getTime()}.pdf`);
+        };
+
+        onSnapshot(query(comprasRef, orderBy("dataCriacao", "desc")), (snap) => {
+            todosRegistros = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderizarLista();
+        });
+
+        document.getElementById('inputBusca').addEventListener('input', renderizarLista);
+        document.getElementById('filtroStatus').addEventListener('change', renderizarLista);
+        document.getElementById('filtroSemana').addEventListener('change', renderizarLista);
+        document.getElementById('filtroMes').addEventListener('change', renderizarLista);
+        document.getElementById('filtroAno').addEventListener('change', renderizarLista);
+        
+        document.getElementById('btnPendencias').addEventListener('click', () => {
+            document.getElementById('filtroStatus').value = 'pendentes';
+            renderizarLista();
+        });
+
+        window.atualizarPedidoNimbi = async (id, valor) => {
+            try { 
+                await updateDoc(doc(db, "compras", id), { 
+                    pedidoNimbi: valor.trim()
+                }); 
+            } 
+            catch (e) { console.error("Erro ao atualizar pedido Nimbi:", e); }
+        };
+
+        window.atualizarPedidoMaxxy = async (id, valor) => {
+            try { 
+                await updateDoc(doc(db, "compras", id), { 
+                    pedidoMaxxy: valor.trim() 
+                }); 
+            } 
+            catch (e) { console.error("Erro ao atualizar pedido Maxxy:", e); }
+        };
+
+        window.atualizarSemana = async (id, semana) => {
+            try { await updateDoc(doc(db, "compras", id), { semanaMes: semana }); } 
+            catch (e) { console.error("Erro ao atualizar semana:", e); }
+        };
+
+        window.atualizarDataDesejada = async (id, dataISO) => {
+            try { await updateDoc(doc(db, "compras", id), { dataDesejada: dataISO }); } 
+            catch (e) { console.error("Erro ao atualizar data desejada:", e); }
+        };
+
+        window.atualizarDataAtendido = async (id, dataISO) => {
+            try { await updateDoc(doc(db, "compras", id), { dataAtendido: dataISO }); } 
+            catch (e) { console.error("Erro ao atualizar data de atendimento:", e); }
+        };
+
+        window.atualizarStatus = async (id, novoStatus) => {
+            try { 
+                await updateDoc(doc(db, "compras", id), { status: novoStatus }); 
+            } 
+            catch (e) { console.error("Erro ao atualizar status:", e); }
+        };
+
+        window.atualizarQtdRecebida = async (id, valor) => {
+            try { await updateDoc(doc(db, "compras", id), { qtdRecebida: valor }); } 
+            catch (e) { console.error("Erro ao atualizar quantidade recebida:", e); }
+        };
+
+        window.atualizarObs = async (id, texto) => {
+            try { await updateDoc(doc(db, "compras", id), { observacao: texto }); } 
+            catch (e) { console.error("Erro ao atualizar OBS:", e); }
+        };
+
+        window.excluir = async (id) => {
+            if(confirm("Deseja eliminar permanentemente este registo?")) {
+                try { await deleteDoc(doc(db, "compras", id)); } 
+                catch (e) { console.error("Erro ao eliminar:", e); }
+            }
+        };
     </script>
 </body>
 </html>

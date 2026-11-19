@@ -201,7 +201,7 @@
         <div class="card">
             <h2 id="tituloTabela"
                 style="margin-top:0; color: var(--primary); font-size: 1.1rem; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
-                📋 PRODUTOS EM ESTOQUE
+                📋 PRODUTOS EM ESTOQUE • Atualização automática
             </h2>
 
             <input type="text" id="inputBusca"
@@ -246,7 +246,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, doc, deleteDoc, updateDoc, writeBatch, limit, orderBy, where, getDocs, startAt, endAt } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, query, doc, deleteDoc, updateDoc, writeBatch, limit, orderBy, where, onSnapshot, startAt, endAt } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
@@ -263,7 +263,13 @@
         let produtosExibidos = [];
         let isImporting = false;
         let timeoutBusca = null;
+        let observadoresProdutos = [];
         const corpoTabela = document.getElementById('corpoTabela');
+
+        function cancelarObservadoresProdutos() {
+            observadoresProdutos.forEach(parar => parar());
+            observadoresProdutos = [];
+        }
 
         // --- FUNÇÃO DE IMPORTAÇÃO (CADENCIADA) ---
         window.importarEmMassa = async () => {
@@ -321,60 +327,69 @@
             reader.readAsText(fileInput.files[0]);
         };
 
-        // --- BUSCA GLOBAL (QUERY NO BANCO) ---
+        // --- BUSCA GLOBAL COM ATUALIZAÇÃO AO VIVO ---
         document.getElementById('inputBusca').addEventListener('input', (e) => {
             const termo = e.target.value.trim();
             clearTimeout(timeoutBusca);
+            cancelarObservadoresProdutos();
 
-            timeoutBusca = setTimeout(async () => {
-                if (termo.length === 0) {
-                    recarregarPadrao();
-                    return;
-                }
+            if (termo.length === 0) {
+                recarregarPadrao();
+                return;
+            }
+            if (termo.length < 2) {
+                corpoTabela.innerHTML = "<tr><td colspan='5' style='text-align:center'>Digite pelo menos 2 caracteres para buscar.</td></tr>";
+                return;
+            }
+            corpoTabela.innerHTML = "<tr><td colspan='5' style='text-align:center'>🔍 Buscando no banco completo...</td></tr>";
+            const termoUpper = termo.toUpperCase();
 
-                if (termo.length < 2) return;
+            timeoutBusca = setTimeout(() => {
+                const resultadosCodigo = new Map();
+                const resultadosNome = new Map();
+                const termoAtual = termo;
 
-                corpoTabela.innerHTML = "<tr><td colspan='5' style='text-align:center'>🔍 Buscando no banco completo...</td></tr>";
-                const termoUpper = termo.toUpperCase();
+                const mostrarResultados = () => {
+                    if (document.getElementById('inputBusca').value.trim() !== termoAtual) return;
+                    const resultados = new Map([...resultadosCodigo, ...resultadosNome]);
+                    document.getElementById('tituloTabela').innerText = `📋 RESULTADOS DA BUSCA (${resultados.size})`;
+                    renderizar([...resultados.values()]);
+                };
+                const erroBusca = (erro) => {
+                    console.error('Falha na consulta em tempo real:', erro);
+                    corpoTabela.innerHTML = "<tr><td colspan='5' style='text-align:center;color:red'>Falha ao consultar os produtos. Verifique o acesso ao Firebase.</td></tr>";
+                };
 
-                try {
-                    let resultados = [];
+                const buscaCodigo = query(collection(db, 'produtos'), where('codigo', '==', termoAtual), limit(10));
+                const buscaNome = query(collection(db, 'produtos'), orderBy('nome'), startAt(termoUpper), endAt(termoUpper + '\uf8ff'), limit(20));
 
-                    // 1. Tenta buscar por Código Exato
-                    const qCod = query(collection(db, "produtos"), where("codigo", "==", termo), limit(10));
-                    const snapCod = await getDocs(qCod);
-                    snapCod.forEach(d => resultados.push({ id: d.id, ...d.data() }));
-
-                    // 2. Se poucos resultados, busca por Nome (começando com...)
-                    if (resultados.length < 5) {
-                        const qNome = query(
-                            collection(db, "produtos"),
-                            orderBy("nome"),
-                            startAt(termoUpper),
-                            endAt(termoUpper + '\uf8ff'),
-                            limit(20)
-                        );
-                        const snapNome = await getDocs(qNome);
-                        snapNome.forEach(d => {
-                            if (!resultados.find(r => r.id === d.id)) resultados.push({ id: d.id, ...d.data() });
-                        });
-                    }
-
-                    document.getElementById('tituloTabela').innerText = `📋 RESULTADOS DA BUSCA (${resultados.length})`;
-                    renderizar(resultados);
-                } catch (err) { console.error(err); }
-            }, 600);
+                observadoresProdutos.push(onSnapshot(buscaCodigo, (snap) => {
+                    resultadosCodigo.clear();
+                    snap.forEach(d => resultadosCodigo.set(d.id, { id: d.id, ...d.data() }));
+                    mostrarResultados();
+                }, erroBusca));
+                observadoresProdutos.push(onSnapshot(buscaNome, (snap) => {
+                    resultadosNome.clear();
+                    snap.forEach(d => resultadosNome.set(d.id, { id: d.id, ...d.data() }));
+                    mostrarResultados();
+                }, erroBusca));
+            }, 500);
         });
 
-        // --- CARREGAMENTO INICIAL (ÚLTIMOS 100) ---
-        async function recarregarPadrao() {
+        // --- ÚLTIMOS 100 PRODUTOS EM TEMPO REAL ---
+        function recarregarPadrao() {
             if (isImporting) return;
-            document.getElementById('tituloTabela').innerText = "📋 ÚLTIMOS PRODUTOS (Exibindo 100)";
-            const q = query(collection(db, "produtos"), orderBy("dataCriacao", "desc"), limit(100));
-            const snap = await getDocs(q);
-            produtosExibidos = [];
-            snap.forEach(d => produtosExibidos.push({ id: d.id, ...d.data() }));
-            renderizar(produtosExibidos);
+            cancelarObservadoresProdutos();
+            document.getElementById('tituloTabela').innerText = '📋 ÚLTIMOS PRODUTOS (Exibindo 100)';
+            const consulta = query(collection(db, 'produtos'), orderBy('dataCriacao', 'desc'), limit(100));
+            observadoresProdutos.push(onSnapshot(consulta, (snap) => {
+                if (isImporting) return;
+                produtosExibidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderizar(produtosExibidos);
+            }, (erro) => {
+                console.error('Falha na atualização do estoque:', erro);
+                corpoTabela.innerHTML = "<tr><td colspan='5' style='text-align:center;color:red'>Não foi possível carregar o estoque.</td></tr>";
+            }));
         }
 
         function renderizar(lista) {
@@ -428,16 +443,15 @@
                     localUso: document.getElementById('editLocal').value,
                     valor: parseFloat(document.getElementById('editValor').value) || 0
                 });
-                alert("Atualizado!");
+                alert("Atualizado! O novo valor será exibido automaticamente nas outras telas.");
                 fecharModal();
-                recarregarPadrao();
             } catch (e) { alert("Erro ao salvar."); }
         };
 
         window.excluirItem = async (id) => {
             if (confirm("Excluir item permanentemente?")) {
                 await deleteDoc(doc(db, "produtos", id));
-                recarregarPadrao();
+                // O observador atual atualiza a tabela automaticamente.
             }
         };
 

@@ -86,11 +86,10 @@
                     </button>
                 </div>
 
-                <!-- OPÇÃO DE ATUALIZAR ESTOQUE AO ALTERAR VALOR -->
-                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-2 rounded-lg cursor-pointer select-none" title="Se marcado, ao alterar o valor total da compra, também atualiza o valor unitário em 'produtos' quando houver código/ID">
-                    <input type="checkbox" id="chkSincronizarEstoque" class="accent-orange-500 rounded cursor-pointer">
-                    <span>Atualizar valor no estoque</span>
-                </label>
+                <!-- A SINCRONIZAÇÃO DE VALORES AGORA É AUTOMÁTICA -->
+                <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-2 rounded-lg" title="Os preços são sincronizados automaticamente entre compras e cadastro de produtos">
+                    🔄 Valores sincronizados automaticamente
+                </span>
 
                 <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
 
@@ -192,7 +191,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, getDocs, limit, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
@@ -209,21 +208,77 @@
         const comprasRef = collection(db, "compras");
 
         let todosRegistros = [];
-        let registrosFiltrados = []; 
+        let registrosOriginais = [];
+        let registrosFiltrados = [];
+
+        // O cadastro de produtos é a referência do preço atual.
+        // Assim, mudanças feitas no banco_dados.html também aparecem aqui em tempo real.
+        let produtosPorId = new Map();
+        let produtosPorCodigo = new Map();
 
         const formatarBRL = (valor) => {
             return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         };
 
         const parseValorInput = (raw) => {
-            if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
-            const limpo = String(raw ?? "")
-                .replace("R$", "")
-                .replace(/\s+/g, "")
-                .replace(",", ".");
-            const num = parseFloat(limpo);
-            return Number.isFinite(num) && num >= 0 ? num : 0;
+            if (typeof raw === 'number') {
+                return Number.isFinite(raw) && raw >= 0 ? raw : null;
+            }
+            let texto = String(raw ?? '').trim().replace(/R\$/gi, '').replace(/\s+/g, '');
+            if (!texto) return null;
+            if (texto.includes(',')) texto = texto.replace(/\./g, '').replace(',', '.');
+            const numero = Number(texto);
+            return Number.isFinite(numero) && numero >= 0 ? numero : null;
         };
+
+        const chaveCodigo = (valor) => String(valor ?? '').trim().toUpperCase();
+        const codigoSemZeros = (codigo) => codigo.replace(/^0+(?=\d)/, '');
+
+        const encontrarProduto = (item) => {
+            const produtoId = item.produtoId || item.idProduto;
+            if (produtoId && produtosPorId.has(String(produtoId))) {
+                return produtosPorId.get(String(produtoId));
+            }
+            const codigo = chaveCodigo(item.codigo);
+            if (!codigo || codigo === 'S/C') return null;
+            const candidatos = produtosPorCodigo.get(codigo) || produtosPorCodigo.get(codigoSemZeros(codigo)) || [];
+            // Não presumir correspondência em caso de códigos duplicados.
+            return candidatos.length === 1 ? candidatos[0] : null;
+        };
+
+        const aplicarPrecosAtuais = () => {
+            todosRegistros = registrosOriginais.map(item => {
+                const produto = encontrarProduto(item);
+                const valorUnitario = produto ? parseValorInput(produto.valor) : null;
+                const quantidade = Number(item.quantidade);
+                if (valorUnitario === null || !Number.isFinite(quantidade) || quantidade <= 0) return item;
+                return {
+                    ...item,
+                    valorUnitario,
+                    valorTotal: Number((valorUnitario * quantidade).toFixed(2))
+                };
+            });
+            renderizarLista();
+        };
+
+        // O onSnapshot de produtos reflete edições do estoque sem F5.
+        onSnapshot(collection(db, 'produtos'), (snap) => {
+            produtosPorId = new Map();
+            produtosPorCodigo = new Map();
+            snap.docs.forEach(d => {
+                const produto = { id: d.id, ...d.data() };
+                produtosPorId.set(d.id, produto);
+                const codigo = chaveCodigo(produto.codigo);
+                if (!codigo || codigo === 'S/C') return;
+                for (const chave of new Set([codigo, codigoSemZeros(codigo)])) {
+                    if (!produtosPorCodigo.has(chave)) produtosPorCodigo.set(chave, []);
+                    produtosPorCodigo.get(chave).push(produto);
+                }
+            });
+            aplicarPrecosAtuais();
+        }, (erro) => {
+            console.error('Não foi possível acompanhar os preços do cadastro:', erro);
+        });
 
         const extrairAnoMes = (item) => {
             const dataBase = item.dataDesejada || item.data || "";
@@ -551,8 +606,10 @@
         };
 
         onSnapshot(query(comprasRef, orderBy("dataCriacao", "desc")), (snap) => {
-            todosRegistros = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderizarLista();
+            registrosOriginais = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            aplicarPrecosAtuais();
+        }, (erro) => {
+            console.error('Não foi possível acompanhar as compras:', erro);
         });
 
         document.getElementById('inputBusca').addEventListener('input', renderizarLista);
@@ -566,52 +623,80 @@
             renderizarLista();
         });
 
+        // Atualiza compra e cadastro de produtos SEM checkbox ou botão extra.
+        // A gravação ocorre quando o usuário confirma o campo (Enter ou perde o foco).
         window.atualizarValorTotal = async (id, inputEl) => {
-            const novoTotal = parseValorInput(inputEl.value);
-            const item = todosRegistros.find(r => r.id === id);
-            const qtd = parseFloat(item?.quantidade) || 0;
-            const valorUnitarioCalculado = qtd > 0 ? Number((novoTotal / qtd).toFixed(4)) : novoTotal;
+            const item = registrosOriginais.find(r => r.id === id);
+            if (!item) {
+                alert('Compra não encontrada. Atualize a página e tente novamente.');
+                return;
+            }
 
-            inputEl.value = novoTotal.toFixed(2);
+            const valorDigitado = parseValorInput(inputEl.value);
+            if (valorDigitado === null) {
+                alert('Informe um valor válido, maior ou igual a zero.');
+                inputEl.value = (parseValorInput(item.valorTotal) ?? 0).toFixed(2);
+                return;
+            }
 
+            const novoTotal = Number(valorDigitado.toFixed(2));
+            const quantidade = Number(item.quantidade);
+            const possuiQuantidade = Number.isFinite(quantidade) && quantidade > 0;
+            // 6 casas no unitário impedem perda relevante por arredondamento
+            // quando o total é dividido por quantidades como 3 ou 6.
+            const novoUnitario = possuiQuantidade ? Number((novoTotal / quantidade).toFixed(6)) : novoTotal;
+            const produtoNoCache = encontrarProduto(item);
+            let refProduto = produtoNoCache ? doc(db, 'produtos', produtoNoCache.id) : null;
+
+            inputEl.disabled = true;
+            inputEl.title = 'Salvando valor no Firebase...';
             try {
-                await updateDoc(doc(db, "compras", id), {
-                    valorTotal: novoTotal,
-                    ...(qtd > 0 ? { valorUnitario: valorUnitarioCalculado } : {})
-                });
+                // Confere o ID original mesmo quando o cache ainda não carregou.
+                if (!refProduto && item.produtoId) {
+                    const candidato = doc(db, 'produtos', String(item.produtoId));
+                    if ((await getDoc(candidato)).exists()) refProduto = candidato;
+                }
 
-                const sincronizarEstoque = document.getElementById('chkSincronizarEstoque')?.checked;
-                if (sincronizarEstoque && item) {
-                    const valorEstoque = qtd > 0 ? Number((novoTotal / qtd).toFixed(2)) : novoTotal;
-                    let atualizadoNoEstoque = false;
-
-                    if (item.produtoId) {
-                        await updateDoc(doc(db, "produtos", String(item.produtoId)), { valor: valorEstoque });
-                        atualizadoNoEstoque = true;
-                    } else if (item.codigo) {
-                        const codOriginal = String(item.codigo).trim();
-                        const qProd = query(collection(db, "produtos"), where("codigo", "==", codOriginal), limit(1));
-                        let snapProd = await getDocs(qProd);
-
-                        const codSemZeros = codOriginal.replace(/^0+/, "");
-                        if (snapProd.empty && codSemZeros && codSemZeros !== codOriginal) {
-                            const qSemZeros = query(collection(db, "produtos"), where("codigo", "==", codSemZeros), limit(1));
-                            snapProd = await getDocs(qSemZeros);
+                // Compras antigas podem não ter produtoId: procurar pelo código.
+                if (!refProduto && item.codigo) {
+                    const original = chaveCodigo(item.codigo);
+                    if (original && original !== 'S/C') {
+                        for (const cod of new Set([original, codigoSemZeros(original)])) {
+                            const busca = query(collection(db, 'produtos'), where('codigo', '==', cod), limit(2));
+                            const resultado = await getDocs(busca);
+                            if (resultado.size > 1) {
+                                throw new Error(`O código ${cod} está duplicado no estoque. Corrija os cadastros antes de sincronizar.`);
+                            }
+                            if (resultado.size === 1) {
+                                refProduto = resultado.docs[0].ref;
+                                break;
+                            }
                         }
-
-                        if (!snapProd.empty) {
-                            await updateDoc(doc(db, "produtos", snapProd.docs[0].id), { valor: valorEstoque });
-                            atualizadoNoEstoque = true;
-                        }
-                    }
-
-                    if (!atualizadoNoEstoque) {
-                        alert("Valor da compra salvo, mas o produto não foi localizado na coleção 'produtos' para atualizar o estoque.");
                     }
                 }
-            } catch (e) {
-                console.error("Erro ao atualizar valor do produto:", e);
-                alert("Erro ao atualizar o valor no banco de dados: " + e.message);
+
+                // O lote impede atualização parcial entre a compra e o cadastro
+                // quando o produto é encontrado.
+                const lote = writeBatch(db);
+                lote.update(doc(db, 'compras', id), {
+                    valorTotal: novoTotal,
+                    valorUnitario: novoUnitario
+                });
+                if (refProduto) lote.update(refProduto, { valor: novoUnitario });
+                await lote.commit();
+                inputEl.value = novoTotal.toFixed(2);
+
+                if (!refProduto) {
+                    alert('O valor da compra foi salvo, mas o produto não foi localizado no cadastro de estoque. Confira o código ou produtoId deste item.');
+                }
+            } catch (erro) {
+                console.error('Erro ao sincronizar o valor da compra:', erro);
+                inputEl.value = (parseValorInput(item.valorTotal) ?? 0).toFixed(2);
+                alert('Não foi possível salvar o novo valor no Firebase: ' + erro.message);
+            } finally {
+                // A página acompanha novas alterações pelas assinaturas em tempo real.
+                inputEl.disabled = false;
+                inputEl.title = 'Altere o total e pressione Enter ou saia do campo para salvar automaticamente';
             }
         };
 

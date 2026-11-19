@@ -33,6 +33,9 @@
 
         .filter-control { background: white; border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; }
         .filter-control:focus { border-color: #f97316; }
+
+        .resumo-card { cursor: pointer; transition: all 0.15s ease; }
+        .resumo-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08); }
     </style>
 </head>
 <body class="pt-24 pb-12 px-4">
@@ -43,7 +46,7 @@
     </nav>
 
     <div class="max-w-6xl mx-auto">
-        <div class="mb-8 flex flex-col justify-between gap-4">
+        <div class="mb-6 flex flex-col justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">📦 Histórico de Compras Realizadas</h1>
                 <p class="text-slate-400 text-sm font-medium">Gestão de estado, controle de pedidos Nimbi/Maxxy e observações em tempo real.</p>
@@ -116,6 +119,45 @@
             </div>
         </div>
 
+        <!-- RESUMO FINANCEIRO POR STATUS (CLICÁVEL PARA FILTRAR) -->
+        <div id="resumoStatus" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+            <div onclick="window.filtrarPorCard('solicitacao')" class="resumo-card bg-yellow-50 border border-yellow-200 p-3 rounded-xl" title="Clique para filtrar por Solicitação">
+                <div class="text-[10px] font-black text-yellow-800 uppercase tracking-wider">Solicitação</div>
+                <div id="val-solicitacao" class="text-sm font-black text-yellow-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-solicitacao" class="text-[10px] font-semibold text-yellow-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('liberado')" class="resumo-card bg-slate-100 border border-slate-200 p-3 rounded-xl" title="Clique para filtrar por Liberado">
+                <div class="text-[10px] font-black text-slate-600 uppercase tracking-wider">Liberado</div>
+                <div id="val-liberado" class="text-sm font-black text-slate-800 mt-0.5">R$ 0,00</div>
+                <div id="qtd-liberado" class="text-[10px] font-semibold text-slate-500">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('pedido')" class="resumo-card bg-orange-50 border border-orange-200 p-3 rounded-xl" title="Clique para filtrar por Pedido Gerado">
+                <div class="text-[10px] font-black text-orange-700 uppercase tracking-wider">Pedido Gerado</div>
+                <div id="val-pedido" class="text-sm font-black text-orange-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-pedido" class="text-[10px] font-semibold text-orange-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('parcial')" class="resumo-card bg-purple-50 border border-purple-200 p-3 rounded-xl" title="Clique para filtrar por Parcial">
+                <div class="text-[10px] font-black text-purple-700 uppercase tracking-wider">Parcial</div>
+                <div id="val-parcial" class="text-sm font-black text-purple-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-parcial" class="text-[10px] font-semibold text-purple-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('atendido')" class="resumo-card bg-green-50 border border-green-200 p-3 rounded-xl" title="Clique para filtrar por Atendido">
+                <div class="text-[10px] font-black text-green-700 uppercase tracking-wider">Atendido</div>
+                <div id="val-atendido" class="text-sm font-black text-green-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-atendido" class="text-[10px] font-semibold text-green-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('cancelado')" class="resumo-card bg-red-50 border border-red-200 p-3 rounded-xl" title="Clique para filtrar por Cancelado">
+                <div class="text-[10px] font-black text-red-700 uppercase tracking-wider">Cancelado</div>
+                <div id="val-cancelado" class="text-sm font-black text-red-900 mt-0.5">R$ 0,00</div>
+                <div id="qtd-cancelado" class="text-[10px] font-semibold text-red-700">0 itens</div>
+            </div>
+            <div onclick="window.filtrarPorCard('todos')" class="resumo-card bg-slate-800 border border-slate-700 p-3 rounded-xl col-span-2 sm:col-span-1" title="Clique para mostrar todos os estados">
+                <div class="text-[10px] font-black text-orange-400 uppercase tracking-wider">Total Ativo</div>
+                <div id="val-total-ativo" class="text-sm font-black text-white mt-0.5">R$ 0,00</div>
+                <div class="text-[9px] font-semibold text-slate-400">Exceto cancelados</div>
+            </div>
+        </div>
+
         <div id="listaCompras" class="grid gap-4">
             <div class="py-20 text-center text-slate-300 font-bold uppercase tracking-widest">A carregar registos...</div>
         </div>
@@ -142,6 +184,10 @@
         let todosRegistros = [];
         let registrosFiltrados = []; 
 
+        const formatarBRL = (valor) => {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        };
+
         const extrairAnoMes = (item) => {
             const dataBase = item.dataDesejada || item.data || "";
             if (dataBase && dataBase.includes("-")) {
@@ -151,7 +197,79 @@
             return { ano: "", mes: "" };
         };
 
+        const atualizarResumoValores = () => {
+            const busca = document.getElementById('inputBusca').value.toLowerCase();
+            const semanaFiltro = document.getElementById('filtroSemana').value;
+            const mesFiltro = document.getElementById('filtroMes').value;
+            const anoFiltro = document.getElementById('filtroAno').value;
+
+            const baseResumo = todosRegistros.filter(item => {
+                const nome = item.nome?.toLowerCase() || "";
+                const codigo = item.codigo?.toLowerCase() || "";
+                const codigoNimbi = item.codigoNimbi?.toLowerCase() || "";
+                const pedNimbi = (item.pedidoNimbi || "")?.toLowerCase();
+                const pedMaxxy = (item.pedidoMaxxy || "")?.toLowerCase();
+                const semana = item.semanaMes || "";
+                
+                const matchesBusca = nome.includes(busca) || 
+                                     codigo.includes(busca) || 
+                                     codigoNimbi.includes(busca) ||
+                                     pedNimbi.includes(busca) || 
+                                     pedMaxxy.includes(busca);
+                
+                const matchesSemana = semanaFiltro === "todas" || semana === semanaFiltro;
+                const { ano, mes } = extrairAnoMes(item);
+                const matchesMes = mesFiltro === "todos" || mes === mesFiltro;
+                const matchesAno = anoFiltro === "todos" || ano === anoFiltro;
+
+                return matchesBusca && matchesSemana && matchesMes && matchesAno;
+            });
+
+            const resumo = {
+                solicitacao: { valor: 0, qtd: 0 },
+                liberado: { valor: 0, qtd: 0 },
+                pedido: { valor: 0, qtd: 0 },
+                parcial: { valor: 0, qtd: 0 },
+                atendido: { valor: 0, qtd: 0 },
+                cancelado: { valor: 0, qtd: 0 }
+            };
+
+            let totalAtivo = 0;
+
+            baseResumo.forEach(item => {
+                const st = item.status || "solicitacao";
+                const val = parseFloat(item.valorTotal) || 0;
+
+                if (resumo[st]) {
+                    resumo[st].valor += val;
+                    resumo[st].qtd += 1;
+                }
+
+                if (st !== "cancelado") {
+                    totalAtivo += val;
+                }
+            });
+
+            Object.keys(resumo).forEach(st => {
+                const elVal = document.getElementById(`val-${st}`);
+                const elQtd = document.getElementById(`qtd-${st}`);
+                if (elVal) elVal.innerText = formatarBRL(resumo[st].valor);
+                if (elQtd) elQtd.innerText = `${resumo[st].qtd} ${resumo[st].qtd === 1 ? 'item' : 'itens'}`;
+            });
+
+            const elTotalAtivo = document.getElementById('val-total-ativo');
+            if (elTotalAtivo) elTotalAtivo.innerText = formatarBRL(totalAtivo);
+        };
+
+        window.filtrarPorCard = (status) => {
+            const selectStatus = document.getElementById('filtroStatus');
+            selectStatus.value = (selectStatus.value === status && status !== 'todos') ? 'todos' : status;
+            renderizarLista();
+        };
+
         const renderizarLista = () => {
+            atualizarResumoValores();
+
             const container = document.getElementById('listaCompras');
             const busca = document.getElementById('inputBusca').value.toLowerCase();
             const statusFiltro = document.getElementById('filtroStatus').value;
@@ -196,7 +314,6 @@
             container.innerHTML = "";
             registrosFiltrados.forEach(item => {
                 const statusClass = `status-${item.status}`;
-                // Mantém intacto o Código Nimbi original do cadastro do item
                 const nimbiDisplay = item.codigoNimbi ? `<span class="text-purple-600 font-bold ml-2">| Nimbi: ${item.codigoNimbi}</span>` : '';
                 const origemDisplay = item.origem ? `<span class="text-[9px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-bold uppercase ml-2">${item.origem}</span>` : '';
 
@@ -404,7 +521,6 @@
             renderizarLista();
         });
 
-        // Atualiza exclusivamente o campo de número do Pedido Nimbi
         window.atualizarPedidoNimbi = async (id, valor) => {
             try { 
                 await updateDoc(doc(db, "compras", id), { 
@@ -414,7 +530,6 @@
             catch (e) { console.error("Erro ao atualizar pedido Nimbi:", e); }
         };
 
-        // Atualiza exclusivamente o campo de número do Pedido Maxxy
         window.atualizarPedidoMaxxy = async (id, valor) => {
             try { 
                 await updateDoc(doc(db, "compras", id), { 

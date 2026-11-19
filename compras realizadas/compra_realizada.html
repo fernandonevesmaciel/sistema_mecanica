@@ -31,6 +31,27 @@
         .ped-input { width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; outline: none; background: #fff; transition: all 0.2s; }
         .ped-input:focus { border-color: #f97316; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15); }
 
+        .valor-input {
+            width: 92px;
+            padding: 3px 6px;
+            border: 1px solid #bbf7d0;
+            background: #f0fdf4;
+            color: #15803d;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 800;
+            text-align: center;
+            outline: none;
+            transition: all 0.15s;
+        }
+        .valor-input:hover { border-color: #22c55e; }
+        .valor-input:focus {
+            background: #ffffff;
+            border-color: #f97316;
+            color: #0f172a;
+            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+        }
+
         .filter-control { background: white; border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.875rem; outline: none; transition: all 0.2s; }
         .filter-control:focus { border-color: #f97316; }
 
@@ -64,6 +85,12 @@
                         📄 Baixar PDF
                     </button>
                 </div>
+
+                <!-- OPÇÃO DE ATUALIZAR ESTOQUE AO ALTERAR VALOR -->
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-2 rounded-lg cursor-pointer select-none" title="Se marcado, ao alterar o valor total da compra, também atualiza o valor unitário em 'produtos' quando houver código/ID">
+                    <input type="checkbox" id="chkSincronizarEstoque" class="accent-orange-500 rounded cursor-pointer">
+                    <span>Atualizar valor no estoque</span>
+                </label>
 
                 <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
 
@@ -165,7 +192,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
@@ -186,6 +213,16 @@
 
         const formatarBRL = (valor) => {
             return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        };
+
+        const parseValorInput = (raw) => {
+            if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
+            const limpo = String(raw ?? "")
+                .replace("R$", "")
+                .replace(/\s+/g, "")
+                .replace(",", ".");
+            const num = parseFloat(limpo);
+            return Number.isFinite(num) && num >= 0 ? num : 0;
         };
 
         const extrairAnoMes = (item) => {
@@ -349,6 +386,10 @@
                     </div>`;
                 }
 
+                const valorTotalNum = parseFloat(item.valorTotal || 0).toFixed(2);
+                const qtdNum = parseFloat(item.quantidade) || 0;
+                const unitarioHint = qtdNum > 0 ? `Unitário atual: R$ ${(parseFloat(item.valorTotal || 0) / qtdNum).toFixed(2)} — Clique para alterar o valor total` : 'Clique para alterar o valor total';
+
                 const card = document.createElement('div');
                 card.className = 'compra-card p-5';
                 card.innerHTML = `
@@ -366,9 +407,13 @@
                                 <div class="text-[9px] font-black text-slate-300 uppercase">Qtd</div>
                                 <div class="font-bold text-slate-700">${item.quantidade}</div>
                             </div>
-                            <div>
-                                <div class="text-[9px] font-black text-slate-300 uppercase">Total</div>
-                                <div class="font-bold text-green-600">R$ ${parseFloat(item.valorTotal || 0).toFixed(2)}</div>
+                            <div class="flex flex-col items-center">
+                                <div class="text-[9px] font-black text-slate-400 uppercase">Total (R$)</div>
+                                <input type="number" step="0.01" min="0"
+                                    class="valor-input mt-0.5"
+                                    value="${valorTotalNum}"
+                                    title="${unitarioHint}"
+                                    onchange="window.atualizarValorTotal('${item.id}', this)">
                             </div>
 
                             <!-- CAMPO: Semana do Mês -->
@@ -520,6 +565,55 @@
             document.getElementById('filtroStatus').value = 'pendentes';
             renderizarLista();
         });
+
+        window.atualizarValorTotal = async (id, inputEl) => {
+            const novoTotal = parseValorInput(inputEl.value);
+            const item = todosRegistros.find(r => r.id === id);
+            const qtd = parseFloat(item?.quantidade) || 0;
+            const valorUnitarioCalculado = qtd > 0 ? Number((novoTotal / qtd).toFixed(4)) : novoTotal;
+
+            inputEl.value = novoTotal.toFixed(2);
+
+            try {
+                await updateDoc(doc(db, "compras", id), {
+                    valorTotal: novoTotal,
+                    ...(qtd > 0 ? { valorUnitario: valorUnitarioCalculado } : {})
+                });
+
+                const sincronizarEstoque = document.getElementById('chkSincronizarEstoque')?.checked;
+                if (sincronizarEstoque && item) {
+                    const valorEstoque = qtd > 0 ? Number((novoTotal / qtd).toFixed(2)) : novoTotal;
+                    let atualizadoNoEstoque = false;
+
+                    if (item.produtoId) {
+                        await updateDoc(doc(db, "produtos", String(item.produtoId)), { valor: valorEstoque });
+                        atualizadoNoEstoque = true;
+                    } else if (item.codigo) {
+                        const codOriginal = String(item.codigo).trim();
+                        const qProd = query(collection(db, "produtos"), where("codigo", "==", codOriginal), limit(1));
+                        let snapProd = await getDocs(qProd);
+
+                        const codSemZeros = codOriginal.replace(/^0+/, "");
+                        if (snapProd.empty && codSemZeros && codSemZeros !== codOriginal) {
+                            const qSemZeros = query(collection(db, "produtos"), where("codigo", "==", codSemZeros), limit(1));
+                            snapProd = await getDocs(qSemZeros);
+                        }
+
+                        if (!snapProd.empty) {
+                            await updateDoc(doc(db, "produtos", snapProd.docs[0].id), { valor: valorEstoque });
+                            atualizadoNoEstoque = true;
+                        }
+                    }
+
+                    if (!atualizadoNoEstoque) {
+                        alert("Valor da compra salvo, mas o produto não foi localizado na coleção 'produtos' para atualizar o estoque.");
+                    }
+                }
+            } catch (e) {
+                console.error("Erro ao atualizar valor do produto:", e);
+                alert("Erro ao atualizar o valor no banco de dados: " + e.message);
+            }
+        };
 
         window.atualizarPedidoNimbi = async (id, valor) => {
             try { 

@@ -161,7 +161,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ================= CONFIGURAÇÕES FIREBASE =================
@@ -215,13 +215,66 @@
         let somaTotalGlobal = 0;
         let valorLimiteDesteMes = 0;
         let editandoItemId = null;
+        let unsubscribeListaMensal = null;
+
+        function sincronizarPrecosComEstoque(listaCarrinho, produtosBase) {
+            if (!Array.isArray(listaCarrinho) || !produtosBase.length) {
+                return { itens: listaCarrinho || [], alterou: false };
+            }
+
+            let alterou = false;
+
+            const itensAtualizados = listaCarrinho.map(item => {
+                const prodMatch = produtosBase.find(p =>
+                    (item.id && String(p.id) === String(item.id)) ||
+                    (item.produtoId && String(p.id) === String(item.produtoId)) ||
+                    (item.codigo && p.codigo && String(p.codigo).trim() === String(item.codigo).trim())
+                );
+
+                if (!prodMatch || prodMatch.valor === undefined || prodMatch.valor === null) {
+                    return item;
+                }
+
+                const precoAtualBanco = parseFloat(String(prodMatch.valor).replace(',', '.'));
+                const precoAtualItem = parseFloat(String(item.valor ?? 0).replace(',', '.'));
+
+                if (!Number.isNaN(precoAtualBanco) && precoAtualBanco !== precoAtualItem) {
+                    alterou = true;
+                    return {
+                        ...item,
+                        valor: precoAtualBanco
+                    };
+                }
+
+                return item;
+            });
+
+            return { itens: itensAtualizados, alterou };
+        }
 
         async function init() {
-            const snap = await getDocs(collection(db, "produtos"));
-            todosProdutos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const d = new Date();
             document.getElementById('selectMes').value = String(d.getMonth() + 1).padStart(2, '0');
             document.getElementById('selectAno').value = d.getFullYear();
+
+            onSnapshot(collection(db, "produtos"), (snap) => {
+                todosProdutos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                monitorarBusca(document.getElementById('inputBusca').value);
+
+                if (periodoId && carrinhoAtual.length > 0) {
+                    const { itens, alterou } = sincronizarPrecosComEstoque(carrinhoAtual, todosProdutos);
+                    if (alterou) {
+                        carrinhoAtual = itens;
+                        renderizarCarrinho();
+                        setDoc(
+                            doc(db, "listas_mensais", periodoId),
+                            { itens: carrinhoAtual, meta: valorLimiteDesteMes },
+                            { merge: true }
+                        ).catch(err => console.error("Erro ao sincronizar preços na lista mensal:", err));
+                    }
+                }
+            });
+
             trocarPeriodo();
         }
 
@@ -248,16 +301,32 @@
             document.getElementById('labelPeriodo').innerText = `Orçamento: ${mesNome} / ${ano}`;
             editandoItemId = null;
 
-            onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
+            if (unsubscribeListaMensal) {
+                unsubscribeListaMensal();
+            }
+
+            unsubscribeListaMensal = onSnapshot(doc(db, "listas_mensais", periodoId), (docSnap) => {
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
-                    carrinhoAtual = (dados.itens || []).map((it, idx) => ({
+                    const itensBrutos = (dados.itens || []).map((it, idx) => ({
                         ...it,
                         itemId: it.itemId || `${it.id}_${idx}_${Date.now()}`
                     }));
                     valorLimiteDesteMes = dados.meta !== undefined ? dados.meta : 0;
+
+                    const syncResult = sincronizarPrecosComEstoque(itensBrutos, todosProdutos);
+                    carrinhoAtual = syncResult.itens;
+
+                    if (syncResult.alterou) {
+                        setDoc(
+                            doc(db, "listas_mensais", periodoId),
+                            { itens: carrinhoAtual, meta: valorLimiteDesteMes },
+                            { merge: true }
+                        ).catch(err => console.error("Erro ao salvar correção automática:", err));
+                    }
                 } else {
-                    carrinhoAtual = []; valorLimiteDesteMes = 0;
+                    carrinhoAtual = [];
+                    valorLimiteDesteMes = 0;
                 }
                 const input = document.getElementById('limiteOrcamento');
                 if (document.activeElement !== input) {
@@ -314,6 +383,7 @@
 
             const novoItem = {
                 ...prod,
+                produtoId: prod.id,
                 itemId: Date.now() + "_" + Math.random().toString(36).substring(2, 7),
                 quantidade: qtd,
                 semanaMes: semana,
@@ -328,6 +398,7 @@
 
             // SALVA NO HISTÓRICO GLOBAL DE COMPRAS
             await addDoc(collection(db, "compras"), {
+                produtoId: prod.id,
                 nome: prod.nome,
                 codigo: prod.codigo || "S/C",
                 codigoNimbi: codNimbi,

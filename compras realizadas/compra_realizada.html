@@ -191,7 +191,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, getDocs, limit, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, where, getDocs, limit, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAwBdNKVmujXM-icPXZllCYw4ED6ugSEK0",
@@ -207,12 +207,28 @@
         const db = getFirestore(app);
         const comprasRef = collection(db, "compras");
 
+        const MAPA_COLECAO_POR_ORIGEM = {
+            "Mecânica": "listas_mensais",
+            "Ferramentas": "listas_mensais_ferramentas",
+            "Hidráulica": "listas_mensais_hidraulica",
+            "Sala de Máquinas": "listas_mensais_sala_maquinas"
+        };
+
+        const resolverPeriodoLista = (item) => {
+            if (item.listaPeriodoId) return item.listaPeriodoId;
+            const dataRef = item.dataDesejada || item.data || "";
+            if (dataRef.includes("-")) {
+                const [ano, mes] = dataRef.split("-");
+                if (mes && ano) return `${mes}-${ano}`;
+            }
+            const agora = new Date();
+            return `${String(agora.getMonth() + 1).padStart(2, '0')}-${agora.getFullYear()}`;
+        };
+
         let todosRegistros = [];
         let registrosOriginais = [];
         let registrosFiltrados = [];
 
-        // O cadastro de produtos é a referência do preço atual.
-        // Assim, mudanças feitas no banco_dados.html também aparecem aqui em tempo real.
         let produtosPorId = new Map();
         let produtosPorCodigo = new Map();
 
@@ -242,7 +258,6 @@
             const codigo = chaveCodigo(item.codigo);
             if (!codigo || codigo === 'S/C') return null;
             const candidatos = produtosPorCodigo.get(codigo) || produtosPorCodigo.get(codigoSemZeros(codigo)) || [];
-            // Não presumir correspondência em caso de códigos duplicados.
             return candidatos.length === 1 ? candidatos[0] : null;
         };
 
@@ -261,7 +276,6 @@
             renderizarLista();
         };
 
-        // O onSnapshot de produtos reflete edições do estoque sem F5.
         onSnapshot(collection(db, 'produtos'), (snap) => {
             produtosPorId = new Map();
             produtosPorCodigo = new Map();
@@ -623,8 +637,6 @@
             renderizarLista();
         });
 
-        // Atualiza compra e cadastro de produtos SEM checkbox ou botão extra.
-        // A gravação ocorre quando o usuário confirma o campo (Enter ou perde o foco).
         window.atualizarValorTotal = async (id, inputEl) => {
             const item = registrosOriginais.find(r => r.id === id);
             if (!item) {
@@ -642,8 +654,6 @@
             const novoTotal = Number(valorDigitado.toFixed(2));
             const quantidade = Number(item.quantidade);
             const possuiQuantidade = Number.isFinite(quantidade) && quantidade > 0;
-            // 6 casas no unitário impedem perda relevante por arredondamento
-            // quando o total é dividido por quantidades como 3 ou 6.
             const novoUnitario = possuiQuantidade ? Number((novoTotal / quantidade).toFixed(6)) : novoTotal;
             const produtoNoCache = encontrarProduto(item);
             let refProduto = produtoNoCache ? doc(db, 'produtos', produtoNoCache.id) : null;
@@ -651,13 +661,11 @@
             inputEl.disabled = true;
             inputEl.title = 'Salvando valor no Firebase...';
             try {
-                // Confere o ID original mesmo quando o cache ainda não carregou.
                 if (!refProduto && item.produtoId) {
                     const candidato = doc(db, 'produtos', String(item.produtoId));
                     if ((await getDoc(candidato)).exists()) refProduto = candidato;
                 }
 
-                // Compras antigas podem não ter produtoId: procurar pelo código.
                 if (!refProduto && item.codigo) {
                     const original = chaveCodigo(item.codigo);
                     if (original && original !== 'S/C') {
@@ -675,8 +683,6 @@
                     }
                 }
 
-                // O lote impede atualização parcial entre a compra e o cadastro
-                // quando o produto é encontrado.
                 const lote = writeBatch(db);
                 lote.update(doc(db, 'compras', id), {
                     valorTotal: novoTotal,
@@ -694,7 +700,6 @@
                 inputEl.value = (parseValorInput(item.valorTotal) ?? 0).toFixed(2);
                 alert('Não foi possível salvar o novo valor no Firebase: ' + erro.message);
             } finally {
-                // A página acompanha novas alterações pelas assinaturas em tempo real.
                 inputEl.disabled = false;
                 inputEl.title = 'Altere o total e pressione Enter ou saia do campo para salvar automaticamente';
             }
@@ -751,9 +756,41 @@
         };
 
         window.excluir = async (id) => {
-            if(confirm("Deseja eliminar permanentemente este registo?")) {
-                try { await deleteDoc(doc(db, "compras", id)); } 
-                catch (e) { console.error("Erro ao eliminar:", e); }
+            if (!confirm("Deseja eliminar permanentemente este registo?")) return;
+
+            const item = registrosOriginais.find(r => r.id === id);
+
+            try {
+                if (item) {
+                    const colecaoLista = item.origemLista || MAPA_COLECAO_POR_ORIGEM[item.origem] || "listas_mensais";
+                    const periodoLista = resolverPeriodoLista(item);
+                    const listaDocRef = doc(db, colecaoLista, periodoLista);
+                    const listaSnap = await getDoc(listaDocRef);
+
+                    if (listaSnap.exists()) {
+                        const dadosLista = listaSnap.data();
+                        const itensAtuais = Array.isArray(dadosLista.itens) ? dadosLista.itens : [];
+
+                        const itensAtualizados = itensAtuais.filter(it => {
+                            if (it.compraId && it.compraId === id) return false;
+                            if (item.itemId && it.itemId === item.itemId) return false;
+                            return true;
+                        });
+
+                        if (itensAtualizados.length !== itensAtuais.length) {
+                            await setDoc(
+                                listaDocRef,
+                                { itens: itensAtualizados, meta: dadosLista.meta ?? 0 },
+                                { merge: true }
+                            );
+                        }
+                    }
+                }
+
+                await deleteDoc(doc(db, "compras", id));
+            } catch (e) {
+                console.error("Erro ao eliminar:", e);
+                alert("Não foi possível excluir o registro completamente: " + e.message);
             }
         };
     </script>

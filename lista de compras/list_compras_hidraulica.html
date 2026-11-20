@@ -77,7 +77,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ================= CONFIGURAÇÕES FIREBASE (MECÂNICA) =================
@@ -98,6 +98,9 @@
             messagingSenderId: "456815528430",
             appId: "1:456815528430:web:4cf873dc8071c9a2bbe6ff"
         };
+
+        const COLECAO_LISTA = "listas_mensais_hidraulica";
+        const ORIGEM_SETOR = "Hidráulica";
 
         const app = initializeApp(firebaseConfigMecanica);
         const db = getFirestore(app);
@@ -152,7 +155,7 @@
 
         async function salvarMetaNoBanco() {
             if (!isUserAdmin) return; 
-            await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
+            await setDoc(doc(db, COLECAO_LISTA, periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
         }
 
         window.trocarPeriodo = () => {
@@ -163,7 +166,7 @@
             document.getElementById('labelPeriodo').innerText = `Orçamento Hidráulica: ${mesNome} / ${ano}`;
             editandoItemId = null;
 
-            onSnapshot(doc(db, "listas_mensais_hidraulica", periodoId), (docSnap) => {
+            onSnapshot(doc(db, COLECAO_LISTA, periodoId), (docSnap) => {
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
                     carrinhoAtual = (dados.itens || []).map((it, idx) => ({
@@ -219,18 +222,45 @@
 
         window.adicionar = async (id) => {
             const prod = todosProdutos.find(p => p.id === id);
+            if (!prod) return;
+
             const qtd = parseInt(document.getElementById(`qtd-${id}`).value) || 1;
             const semana = document.getElementById(`semana-${id}`).value || "";
             const dataDes = document.getElementById(`dataDesejada-${id}`).value || "";
             const localUso = document.getElementById(`local-${id}`).value || "Geral";
             const codNimbi = document.getElementById(`nimbi-${id}`).value || "";
             const codMov = document.getElementById(`movimentacao-${id}`).value || "";
-            const valorUnit = parseFloat(String(prod.valor).replace(',', '.'));
-            
-            // Cada adição gera um itemId único para permitir o mesmo produto repetido com Nimbi ou semana diferente
+            const valorUnit = parseFloat(String(prod.valor).replace(',', '.')) || 0;
+            const itemIdUnico = Date.now() + "_" + Math.random().toString(36).substring(2, 7);
+
+            const compraRef = await addDoc(collection(db, "compras"), {
+                itemId: itemIdUnico,
+                produtoId: prod.id,
+                nome: prod.nome,
+                codigo: prod.codigo || "S/C",
+                codigoNimbi: codNimbi,
+                codigoMovimentacao: codMov,
+                local: localUso,
+                origem: ORIGEM_SETOR,
+                origemLista: COLECAO_LISTA,
+                listaPeriodoId: periodoId,
+                semanaMes: semana,
+                quantidade: qtd,
+                dataDesejada: dataDes,
+                valorUnitario: valorUnit,
+                valorTotal: Number((valorUnit * qtd).toFixed(2)),
+                data: new Date().toISOString().split('T')[0],
+                status: "solicitacao",
+                observacao: `Nimbi: ${codNimbi} | Mov: ${codMov}${semana ? ' | ' + semana : ''}`,
+                dataCriacao: new Date()
+            });
+
             const novoItem = {
                 ...prod,
-                itemId: Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+                produtoId: prod.id,
+                itemId: itemIdUnico,
+                compraId: compraRef.id,
+                listaPeriodoId: periodoId,
                 quantidade: qtd,
                 semanaMes: semana,
                 dataDesejada: dataDes,
@@ -240,33 +270,24 @@
             };
 
             const novaLista = [...carrinhoAtual, novoItem];
-            await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
-
-            await addDoc(collection(db, "compras"), {
-                nome: prod.nome,
-                codigo: prod.codigo || "S/C",
-                codigoNimbi: codNimbi,
-                codigoMovimentacao: codMov,
-                local: localUso,
-                origem: "Hidráulica",
-                semanaMes: semana,
-                quantidade: qtd,
-                dataDesejada: dataDes,
-                valorUnitario: valorUnit,
-                valorTotal: valorUnit * qtd,
-                data: new Date().toISOString().split('T')[0],
-                status: "solicitacao",
-                observacao: `Nimbi: ${codNimbi} | Mov: ${codMov}${semana ? ' | ' + semana : ''}`,
-                dataCriacao: new Date()
-            });
+            await setDoc(doc(db, COLECAO_LISTA, periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
 
             const elNimbi = document.getElementById(`nimbi-${id}`);
             if (elNimbi) elNimbi.value = "";
         };
 
         window.remover = async (itemId) => {
+            const itemRemovido = carrinhoAtual.find(i => (i.itemId || i.id) === itemId);
             const novaLista = carrinhoAtual.filter(i => (i.itemId || i.id) !== itemId);
-            await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+            await setDoc(doc(db, COLECAO_LISTA, periodoId), { itens: novaLista, meta: valorLimiteDesteMes }, { merge: true });
+
+            if (itemRemovido?.compraId) {
+                try {
+                    await deleteDoc(doc(db, "compras", itemRemovido.compraId));
+                } catch (err) {
+                    console.error("Erro ao remover item no histórico de compras:", err);
+                }
+            }
         };
 
         window.editar = (itemId) => {
@@ -299,7 +320,7 @@
                 editandoItemId = null;
                 renderizarCarrinho();
 
-                await setDoc(doc(db, "listas_mensais_hidraulica", periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
+                await setDoc(doc(db, COLECAO_LISTA, periodoId), { itens: carrinhoAtual, meta: valorLimiteDesteMes }, { merge: true });
             }
         };
 
